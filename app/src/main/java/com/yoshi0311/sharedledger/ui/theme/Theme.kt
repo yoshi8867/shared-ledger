@@ -9,28 +9,53 @@ import androidx.compose.material3.dynamicDarkColorScheme
 import androidx.compose.material3.dynamicLightColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 
 private val DarkColorScheme = darkColorScheme(
-    primary = Purple80,
-    secondary = PurpleGrey80,
-    tertiary = Pink80
+    primary = IndigoLightDark,
+    onPrimary = IndigoContainerDark,
+    primaryContainer = IndigoContainerDark,
+    onPrimaryContainer = IndigoLightDark,
+
+    secondary = TealLightDark,
+    onSecondary = TealContainerDark,
+    secondaryContainer = TealContainerDark,
+    onSecondaryContainer = TealLightDark,
+
+    tertiary = PurpleLightDark,
+    onTertiary = PurpleContainerDark,
+    tertiaryContainer = PurpleContainerDark,
+    onTertiaryContainer = PurpleLightDark,
+
+    error = ErrorDark,
+    background = BackgroundDark,
+    onBackground = Color.White,
+    surface = SurfaceDark,
+    onSurface = Color.White
 )
 
 private val LightColorScheme = lightColorScheme(
-    primary = Purple40,
-    secondary = PurpleGrey40,
-    tertiary = Pink40
+    primary = IndigoLight,
+    onPrimary = OnIndigoLight,
+    primaryContainer = IndigoLightContainer,
+    onPrimaryContainer = IndigoLight,
 
-    /* Other default colors to override
-    background = Color(0xFFFFFBFE),
-    surface = Color(0xFFFFFBFE),
-    onPrimary = Color.White,
-    onSecondary = Color.White,
-    onTertiary = Color.White,
-    onBackground = Color(0xFF1C1B1F),
-    onSurface = Color(0xFF1C1B1F),
-    */
+    secondary = TealLight,
+    onSecondary = OnTealLight,
+    secondaryContainer = TealLightContainer,
+    onSecondaryContainer = TealLight,
+
+    tertiary = PurpleLight,
+    onTertiary = OnPurpleLight,
+    tertiaryContainer = PurpleLightContainer,
+    onTertiaryContainer = PurpleLight,
+
+    error = ErrorLight,
+    background = BackgroundLight,
+    onBackground = OnBackgroundLight,
+    surface = SurfaceLight,
+    onSurface = OnSurfaceLight
 )
 
 @Composable
@@ -52,7 +77,7 @@ fun SharedLedgerTheme(
 
     MaterialTheme(
         colorScheme = colorScheme,
-        typography = Typography,
+        typography = SharedLedgerTypography,
         content = content
     )
 }
