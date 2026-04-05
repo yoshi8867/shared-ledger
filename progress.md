@@ -16,7 +16,7 @@
 ██░░░░░░░░░░░░░░░░░░ 13% (10/77) — Phase 1 완료, Phase 2~8 미시작
 
 ### 백엔드 서버 (Node.js)
-████░░░░░░░░░░░░░░░░ 25% (S1~S2 완료, S3~S8 미시작)
+██████░░░░░░░░░░░░░░ 38% (S1~S3 완료, S4~S8 미시작)
 
 ---
 
@@ -437,12 +437,13 @@
 
 ---
 
-### S3️⃣ 인증 API (이메일) ⏳
-- [ ] `POST /api/auth/signup` - 이메일 회원가입 (bcrypt 해싱)
-- [ ] `POST /api/auth/login` - 이메일 로그인 + JWT 발급
-- [ ] `POST /api/auth/refresh` - 토큰 갱신
-- [ ] JWT 미들웨어 (`authMiddleware.js`)
-- **테스트:** 회원가입 → 로그인 → 토큰 검증 흐름 확인
+### S3️⃣ 인증 API (이메일) ✅
+- [x] `POST /api/auth/signup` - 이메일 회원가입 (bcrypt 해싱, 기본 장부 자동 생성)
+- [x] `POST /api/auth/login` - 이메일 로그인 + JWT 발급
+- [x] `POST /api/auth/refresh` - refresh token으로 access token 갱신
+- [x] `GET /api/auth/verify` - 토큰 유효성 검증
+- [x] JWT auth 미들웨어 (`middleware/auth.js`)
+- [x] **테스트:** 14/14 전부 통과 ✅ (signup, 중복, 유효성, login, 틀린 pw, verify, 무효 token, refresh)
 
 ---
 
@@ -502,4 +503,4 @@
 
 ## 🎯 다음 단계
 
-**다음 단계:** 백엔드 S3 (이메일 인증 API) — Neon 커넥션 string 제공 후 진행
+**다음 단계:** 백엔드 S4 (Google / Naver OAuth) 또는 S5 (거래/카테고리 CRUD API)
