@@ -7,7 +7,7 @@
 
 ## 📊 전체 진행도
 
-██████░░░░░░░░░░░░░░ 30% (3/10)
+████████░░░░░░░░░░░░ 40% (4/10)
 
 ---
 
@@ -40,12 +40,12 @@
 
 ---
 
-### 4️⃣ Navigation 시스템 구축 ⏳
-- [ ] navigation/AppNavigation.kt 작성
-- [ ] Sealed class Routes 정의
-- [ ] NavHost 설정 (SplashScreen → LoginScreen → HomeScreen)
-- [ ] 화면 간 이동 로직
-- **테스트:** 화면 전환 동작 확인
+### 4️⃣ Navigation 시스템 구축 ✅
+- [x] navigation/AppNavigation.kt 작성
+- [x] Sealed class Routes 정의
+- [x] NavHost 설정 (SplashScreen → LoginScreen → HomeScreen)
+- [x] 화면 간 이동 로직 (backStack 제거 포함)
+- [x] **테스트:** 화면 전환 동작 확인 ✅
 
 ---
 
@@ -107,7 +107,7 @@
 
 ## 📝 마지막 업데이트
 
-**2026-04-05** | 2단계 테마 시스템 완료 (Indigo 기반 색상 팔레트 + MD3 타이포그래피)
+**2026-04-05** | 4단계 Navigation 시스템 완료 (Routes, NavHost, Splash→Login→Home)
 
 ---
 
