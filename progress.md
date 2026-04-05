@@ -1,7 +1,8 @@
 # Shared Ledger App - 개발 진행도
 
 **작성일:** 2026-04-05  
-**Phase:** 1 (프로젝트 설정, Room DB, 기본 Navigation, 테마)
+**최종 업데이트:** 2026-04-05  
+**현재 Phase:** 1 완료 → Phase 2 대기 중
 
 ---
 
@@ -12,37 +13,39 @@
 ## 📊 전체 진행도
 
 ### Android 앱
-████████████████████ 100% (10/10)
+██░░░░░░░░░░░░░░░░░░ 13% (10/77) — Phase 1 완료, Phase 2~8 미시작
 
 ### 백엔드 서버 (Node.js)
-░░░░░░░░░░░░░░░░░░░░ 0% (0/8)
-
----
+████░░░░░░░░░░░░░░░░ 25% (S1~S2 완료, S3~S8 미시작)
 
 ---
 
 ## 📱 Android 앱
 
-### 1️⃣ 프로젝트 초기 설정 ✅
+---
+
+### Phase 1 — 프로젝트 설정 / DB / Navigation / 테마 ✅
+
+#### 1️⃣ 프로젝트 초기 설정 ✅
 - [x] build.gradle.kts (앱 수준) 작성
 - [x] AndroidManifest.xml 기본 설정
 - [x] 폴더 구조 생성 (ui, data, domain 등)
-- [x] 필수 의존성 추가 (Compose, Room, Retrofit)
+- [x] 필수 의존성 추가 (Compose, Room, Retrofit, Hilt 등)
 - [x] **테스트:** 앱 빌드 및 설치 성공 ✅
 - [x] GitHub에 push 완료
 
 ---
 
-### 2️⃣ 테마 시스템 구축 (라이트/다크) ✅
-- [x] ui/theme/Color.kt (라이트/다크 모드 색상 정의)
+#### 2️⃣ 테마 시스템 구축 (라이트/다크) ✅
+- [x] ui/theme/Color.kt (라이트 B-1 / 다크 쿨 B-2 색상 정의)
 - [x] ui/theme/Type.kt (MD3 완전한 타이포그래피)
 - [x] ui/theme/Theme.kt (LightTheme & DarkTheme Composable)
-- [x] 색상 시스템: Indigo 기반 Primary, Secondary(Teal), Tertiary(Purple) 정의
+- [x] 색상 시스템: Indigo 기반 Primary, Secondary(Blue), Tertiary(Purple) 정의
 - [x] **테스트:** 색상/타이포그래피 Preview 확인 ✅
 
 ---
 
-### 3️⃣ 테마 시스템 구축 (다크) ✅
+#### 3️⃣ 다크 테마 구축 ✅
 - [x] Color.kt에 다크 모드 색상 추가
 - [x] Theme.kt에 DarkTheme Composable 추가
 - [x] 시스템 기본 테마 감지 (isSystemInDarkTheme)
@@ -50,7 +53,7 @@
 
 ---
 
-### 4️⃣ Navigation 시스템 구축 ✅
+#### 4️⃣ Navigation 시스템 구축 ✅
 - [x] navigation/AppNavigation.kt 작성
 - [x] Sealed class Routes 정의
 - [x] NavHost 설정 (SplashScreen → LoginScreen → HomeScreen)
@@ -59,7 +62,7 @@
 
 ---
 
-### 5️⃣ SplashScreen 구현 ✅
+#### 5️⃣ SplashScreen 구현 ✅
 - [x] ui/screens/splash/SplashScreen.kt
 - [x] 로고(SL 이니셜) + 앱명 + 서브타이틀 표시
 - [x] 페이드인 애니메이션 (0.6초)
@@ -68,7 +71,7 @@
 
 ---
 
-### 6️⃣ LoginScreen 구현 ✅
+#### 6️⃣ LoginScreen UI 구현 ✅
 - [x] ui/screens/login/LoginScreen.kt
 - [x] 이메일/비밀번호 입력 필드 (눈 모양 토글 포함)
 - [x] 로그인 버튼 (UI만)
@@ -79,42 +82,328 @@
 
 ---
 
-### 7️⃣ HomeScreen 기본 구현 ✅
+#### 7️⃣ HomeScreen UI 기본 구현 ✅
 - [x] ui/screens/home/HomeScreen.kt
-- [x] 상단 Header (월 선택, 동기화 상태)
-- [x] 3개 탭 (목록/캘린더/통계) - 탭만 표시
-- [x] FAB (추가 버튼)
+- [x] 상단 TopAppBar (월 표시, 동기화 버튼 UI)
+- [x] 3개 탭 (목록/캘린더/통계) TabRow
+- [x] FAB (추가 버튼 UI)
 - [x] **테스트:** 탭 전환 동작 확인 ✅
 
 ---
 
-### 8️⃣ Room Database 초기 설정 ✅
+#### 8️⃣ Room Database 초기 설정 ✅
 - [x] data/db/AppDatabase.kt
 - [x] data/db/entity/TransactionEntity.kt (소프트 딜리트 포함)
 - [x] data/db/entity/CategoryEntity.kt
 - [x] data/db/dao/TransactionDao.kt
 - [x] data/db/dao/CategoryDao.kt
-- [x] **테스트:** Entity 생성 및 DAO 쿼리 테스트 ✅
+- [x] **테스트:** Entity 생성 및 DAO 쿼리 확인 ✅
 
 ---
 
-### 9️⃣ Repository 및 ViewModel 기본 구조 ✅
+#### 9️⃣ Repository 및 ViewModel 기본 구조 ✅
 - [x] data/repository/TransactionRepository.kt
 - [x] data/repository/CategoryRepository.kt
 - [x] ui/screens/home/HomeViewModel.kt
 - [x] StateFlow로 UI 상태 관리 (HomeUiState)
-- **테스트:** ViewModel 초기화 및 데이터 로드 테스트
+- [x] combine()으로 4개 Flow 병합
+- [x] **테스트:** ViewModel 초기화 및 데이터 로드 확인 ✅
 
 ---
 
-### 🔟 Hilt Dependency Injection 설정 ✅
+#### 🔟 Hilt Dependency Injection 설정 ✅
 - [x] di/HiltModule.kt (Database, Repository 제공)
 - [x] @HiltAndroidApp 추가 (SharedLedgerApp)
 - [x] @AndroidEntryPoint 추가 (MainActivity)
 - [x] @HiltViewModel + @Inject constructor (HomeViewModel)
-- **테스트:** 의존성 주입 동작 확인
+- [x] javapoet 버전 충돌 수정 (buildscript classpath 강제 지정)
+- [x] **테스트:** 의존성 주입 동작 확인 ✅
 
 ---
+
+---
+
+### Phase 2 — 인증 기능 구현 ⏳
+
+#### 1️⃣ AuthViewModel 및 AuthRepository 구현 ⏳
+- [ ] ui/screens/auth/AuthViewModel.kt — 로그인/회원가입 상태 관리
+- [ ] data/repository/AuthRepository.kt — 로컬 토큰 저장 (SharedPreferences/DataStore)
+- [ ] JWT 토큰 저장, 읽기, 갱신 로직
+
+---
+
+#### 2️⃣ SplashScreen 자동 로그인 연동 ⏳
+- [ ] 저장된 JWT 토큰 확인 → 유효하면 HomeScreen으로 바로 이동
+- [ ] 서버 `/api/health` Wake 호출 (Render.com 슬립 대비)
+- [ ] **테스트:** 자동 로그인 → HomeScreen 이동 확인
+
+---
+
+#### 3️⃣ LoginScreen 실제 기능 구현 ⏳
+- [ ] 이메일/비밀번호 유효성 검사 (공백, 형식)
+- [ ] 서버 `POST /api/auth/login` 연동 → JWT 저장
+- [ ] 에러 처리 및 Snackbar 피드백 (잘못된 비밀번호, 네트워크 오류 등)
+- [ ] 건너뛰기 확인 다이얼로그 ("서버 동기화 기능을 사용할 수 없습니다")
+- [ ] **테스트:** 로그인 성공/실패/건너뛰기 시나리오
+
+---
+
+#### 4️⃣ SignupScreen 구현 ⏳
+- [ ] ui/screens/auth/SignupScreen.kt
+- [ ] 이름/이메일/비밀번호/비밀번호 확인 입력 필드
+- [ ] 유효성 검사 (비밀번호 일치, 이메일 형식)
+- [ ] 서버 `POST /api/auth/signup` 연동
+- [ ] 가입 완료 후 LoginScreen으로 복귀
+- [ ] **테스트:** 회원가입 → 로그인 흐름 확인
+
+---
+
+#### 5️⃣ Google OAuth 구현 ⏳
+- [ ] play-services-auth 연동 (Google Sign-In)
+- [ ] 서버 `POST /api/auth/oauth/google` 연동 → JWT 저장
+- [ ] **테스트:** 구글 계정으로 로그인 성공 확인
+
+---
+
+#### 6️⃣ Naver OAuth 구현 ⏳
+- [ ] Naver SDK 또는 WebView 기반 OAuth 흐름
+- [ ] 서버 `POST /api/auth/oauth/naver` 연동 → JWT 저장
+- [ ] **테스트:** 네이버 계정으로 로그인 성공 확인
+
+---
+
+#### 7️⃣ 토큰 갱신 및 AuthInterceptor ⏳
+- [ ] network/interceptor/AuthInterceptor.kt — 모든 요청에 Authorization 헤더 추가
+- [ ] 토큰 만료 시 `POST /api/auth/refresh` 자동 재시도
+- [ ] 갱신 실패 시 LoginScreen으로 이동
+- [ ] **테스트:** 만료 토큰 → 갱신 → 재요청 흐름 확인
+
+---
+
+---
+
+### Phase 3 — 거래 CRUD 기능 구현 ⏳
+
+#### 1️⃣ TransactionEditScreen 구현 ⏳
+- [ ] ui/screens/transaction/TransactionEditScreen.kt
+- [ ] 수입/지출 토글 (Segmented Button 또는 ToggleButton)
+- [ ] 금액 입력 필드 (숫자 키패드)
+- [ ] 날짜 + 시간 Row (같은 행, weight=1 분할)
+- [ ] 내용 입력 필드 (설명)
+- [ ] 구분(카테고리) 선택 + "+ 구분 추가" 버튼 Row
+- [ ] 저장 버튼 → Room DB 삽입 후 HomeScreen 복귀 (탭/상태 유지)
+- [ ] **테스트:** 거래 추가 후 목록에 표시 확인
+
+---
+
+#### 2️⃣ TransactionEditScreen 수정 모드 ⏳
+- [ ] 기존 거래 항목 클릭 시 데이터 프리필(pre-fill)
+- [ ] 수정 저장 → Room DB 업데이트
+- [ ] 삭제 버튼 → 소프트 딜리트 (`is_deleted = true`)
+- [ ] **테스트:** 거래 수정/삭제 후 목록 반영 확인
+
+---
+
+#### 3️⃣ CategoryDialog 구현 ⏳
+- [ ] ui/screens/transaction/CategoryDialog.kt (BottomSheet 또는 AlertDialog)
+- [ ] 기존 구분 목록 표시 및 선택
+- [ ] 새 구분 이름 입력 + 색상 선택
+- [ ] Room DB CategoryEntity 삽입
+- [ ] **테스트:** 구분 추가 후 TransactionEditScreen 반영 확인
+
+---
+
+#### 4️⃣ HomeScreen MonthSelectorBar 구현 ⏳
+- [ ] ui/components/MonthSelectorBar.kt — 이전/다음 월 이동 버튼
+- [ ] 선택된 월에 따라 HomeViewModel 쿼리 범위 업데이트
+- [ ] **테스트:** 월 이동 시 거래 목록 변경 확인
+
+---
+
+#### 5️⃣ FAB → TransactionEditScreen 연결 ⏳
+- [ ] FAB 클릭 시 TransactionEditScreen으로 네비게이션
+- [ ] 추가 완료 후 이전 탭 상태 복원 (backStack 활용)
+- [ ] **테스트:** FAB → 추가 → 복귀 흐름 확인
+
+---
+
+---
+
+### Phase 4 — 목록형 / 캘린더형 / 통계형 뷰 구현 ⏳
+
+#### 1️⃣ ListViewTab 구현 ⏳
+- [ ] ui/screens/home/ListViewTab.kt
+- [ ] 날짜별 그룹핑 (LazyColumn + stickyHeader)
+- [ ] ui/components/TransactionItem.kt — 금액, 구분, 내용 표시
+- [ ] 항목 클릭 → TransactionEditScreen (수정 모드)
+- [ ] 빈 목록 안내 문구
+- [ ] **테스트:** 거래 목록 표시 및 클릭 이동 확인
+
+---
+
+#### 2️⃣ CalendarViewTab 구현 ⏳
+- [ ] ui/screens/home/CalendarViewTab.kt
+- [ ] ui/components/CalendarComposable.kt — 커스텀 달력 그리드
+- [ ] 날짜 셀에 수입(파랑) / 지출(빨강) 총합 숫자 표시
+- [ ] 날짜 선택 시 해당 날짜 거래 목록 표시 (하단 슬라이드)
+- [ ] "[+ 추가]" 버튼 (선택된 날짜 기반 TransactionEditScreen 이동)
+- [ ] MonthSelectorBar 연동 (캘린더 자체엔 월 이동 없음)
+- [ ] **테스트:** 날짜 선택, 거래 지표 표시, 추가 이동 확인
+
+---
+
+#### 3️⃣ StatisticViewTab 구현 ⏳
+- [ ] ui/screens/home/StatisticViewTab.kt
+- [ ] ui/components/BarChart.kt — 카테고리별 막대 그래프
+- [ ] ui/components/PieChart.kt — 지출 비중 원형 차트
+- [ ] 월별 수입 합계 / 지출 합계 요약 카드
+- [ ] 수입/지출 탭 전환 (Segmented Button)
+- [ ] **테스트:** 차트 렌더링 및 데이터 연동 확인
+
+---
+
+---
+
+### Phase 5 — Push 알림 / SMS 자동입력 ⏳
+
+#### 1️⃣ NotificationListenerService 구현 ⏳
+- [ ] service/notification/NotificationListenerService.kt
+- [ ] AndroidManifest에 권한 및 서비스 등록
+- [ ] 지정된 앱의 알림 수신 → 금액/내용 파싱
+- [ ] 파싱 결과를 Room DB에 pending 상태로 저장
+- [ ] **테스트:** 수집 앱 알림 수신 → pending 항목 생성 확인
+
+---
+
+#### 2️⃣ AutoFillPushScreen 구현 ⏳
+- [ ] ui/screens/autofill/AutoFillPushScreen.kt
+- [ ] 수집 대상 앱 선택/해제 목록
+- [ ] pending 거래 목록 표시 (ui/components/PendingTransactionItem.kt)
+- [ ] 승인(→ confirmed) / 거절(→ soft delete) 액션
+- [ ] **테스트:** 승인 후 HomeScreen 거래 목록 반영 확인
+
+---
+
+#### 3️⃣ SMSParser 구현 ⏳
+- [ ] service/sms/SMSParser.kt — 카드사/은행 SMS 패턴 파싱
+- [ ] util/SMSParser.kt — 금액, 사용처, 날짜 추출 정규식
+- [ ] READ_SMS 권한 처리 (런타임 권한 요청)
+
+---
+
+#### 4️⃣ AutoFillSMSScreen 구현 ⏳
+- [ ] ui/screens/autofill/AutoFillSMSScreen.kt
+- [ ] 기간 선택 (최근 N일 / 절대 날짜 범위)
+- [ ] SMS 파싱 후 pending 거래 목록 표시
+- [ ] 승인/거절 액션
+- [ ] **테스트:** SMS 파싱 결과 정확도 및 승인 흐름 확인
+
+---
+
+---
+
+### Phase 6 — 양방향 동기화 ⏳
+
+#### 1️⃣ Retrofit 네트워크 레이어 구성 ⏳
+- [ ] network/api/TransactionApi.kt, CategoryApi.kt, SyncApi.kt
+- [ ] network/interceptor/AuthInterceptor.kt (JWT 헤더 자동 삽입)
+- [ ] di/NetworkModule.kt (Retrofit, OkHttp Hilt 제공)
+- [ ] **테스트:** API 호출 및 응답 파싱 확인
+
+---
+
+#### 2️⃣ SyncWorker 구현 (WorkManager) ⏳
+- [ ] service/sync/SyncWorker.kt — 백그라운드 동기화 작업
+- [ ] service/sync/SyncManager.kt — 동기화 스케줄 관리
+- [ ] 설정에서 주기 설정 (수동 / 15분 / 1시간 등)
+
+---
+
+#### 3️⃣ Delta 동기화 구현 ⏳
+- [ ] 서버 `GET /api/sync/delta?since={timestamp}` 연동
+- [ ] 변경분 다운로드 → Room DB 업데이트
+- [ ] `sync_status`: synced / pending / conflict 관리
+
+---
+
+#### 4️⃣ 로컬 변경사항 업로드 ⏳
+- [ ] 서버 `POST /api/sync/push` 연동
+- [ ] pending 상태 항목 일괄 전송
+- [ ] 충돌 해결 (타임스탬프 기반 최신 우선)
+- [ ] **테스트:** 오프라인 추가 → 온라인 복귀 → 동기화 정합성 확인
+
+---
+
+#### 5️⃣ 동기화 상태 UI 반영 ⏳
+- [ ] HomeScreen TopAppBar 동기화 아이콘 실제 연결
+- [ ] 동기화 중 로딩 표시, 완료 시 피드백 (Snackbar)
+- [ ] **테스트:** 수동 동기화 버튼 → 완료 피드백 확인
+
+---
+
+---
+
+### Phase 7 — 공유 장부 ⏳
+
+#### 1️⃣ SharedLedgerScreen 구현 ⏳
+- [ ] ui/screens/shared/SharedLedgerScreen.kt
+- [ ] 현재 공유 사용자 목록 (권한 표시)
+- [ ] 이메일로 사용자 검색 (`GET /api/users/search?email=`)
+- [ ] 초대 → 서버 `POST /api/shared-ledgers`
+
+---
+
+#### 2️⃣ 공유 권한 관리 ⏳
+- [ ] 권한 변경 (view/edit) → `PATCH /api/shared-ledgers/{id}`
+- [ ] 공유 해제 → `DELETE /api/shared-ledgers/{id}`
+- [ ] **테스트:** 초대 → 권한 변경 → 해제 흐름 확인
+
+---
+
+#### 3️⃣ 공유된 장부 수신 ⏳
+- [ ] 나와 공유된 장부 목록 (`GET /api/ledgers/shared`)
+- [ ] 장부 전환 기능 (HomeViewModel에 현재 장부 ID 동적 변경)
+- [ ] **테스트:** 공유 장부 전환 후 거래 목록 변경 확인
+
+---
+
+---
+
+### Phase 8 — 설정 화면 / 테스트 / 배포 ⏳
+
+#### 1️⃣ SettingsScreen 구현 ⏳
+- [ ] ui/screens/settings/SettingsScreen.kt
+- [ ] 동기화 주기 설정
+- [ ] 알림 설정 (Push 자동입력 ON/OFF)
+- [ ] 서버 상태 확인 (`GET /api/health`)
+- [ ] 로그아웃 (토큰 삭제 → LoginScreen 이동)
+
+---
+
+#### 2️⃣ CategoryManageScreen 구현 ⏳
+- [ ] ui/screens/category/CategoryManageScreen.kt
+- [ ] 구분 목록 (추가/수정/삭제)
+- [ ] 색상 선택기
+- [ ] **테스트:** 구분 CRUD 후 거래 화면 반영 확인
+
+---
+
+#### 3️⃣ 유닛 테스트 ⏳
+- [ ] ViewModel 유닛 테스트 (MockK 또는 Turbine)
+- [ ] Repository 유닛 테스트 (인메모리 Room DB)
+
+---
+
+#### 4️⃣ UI/통합 테스트 ⏳
+- [ ] Compose UI 테스트 (ComposeTestRule)
+- [ ] 주요 흐름 End-to-End 테스트
+
+---
+
+#### 5️⃣ 최적화 및 배포 준비 ⏳
+- [ ] ProGuard / R8 난독화 설정
+- [ ] APK/AAB 릴리즈 빌드 테스트
+- [ ] Google Play 등록 준비 (스크린샷, 설명 등)
 
 ---
 
@@ -122,27 +411,29 @@
 
 ## 🖥️ 백엔드 서버 (Node.js)
 
-### S1️⃣ 서버 프로젝트 초기 설정 ⏳
-- [ ] 프로젝트 폴더 생성 및 `npm init`
-- [ ] Express, cors, dotenv, pg (node-postgres) 등 필수 패키지 설치
-- [ ] 폴더 구조 생성 (routes, controllers, middleware, db 등)
-- [ ] `.env` 파일 설정 (PORT, DATABASE_URL, JWT_SECRET 등)
-- [ ] `app.js` / `server.js` 기본 진입점 작성
-- [ ] `GET /api/health` 헬스 체크 엔드포인트 (Render.com sleep wake용)
-- **테스트:** 서버 로컬 기동 및 `/api/health` 응답 확인
+### S1️⃣ 서버 프로젝트 초기 설정 ✅
+- [x] `server/` 폴더 생성
+- [x] Express, cors, dotenv, pg, jsonwebtoken, bcrypt, morgan 설치
+- [x] 폴더 구조 생성 (routes, middleware, db)
+- [x] `.env` / `.env.example` 파일 작성 (PORT, DATABASE_URL, JWT_SECRET)
+- [x] `app.js` / `server.js` 진입점 작성
+- [x] `GET /api/health` 헬스 체크 엔드포인트
+- [x] 모든 API 라우트 스텁 정의 (auth, transactions, categories, ledgers, sync, shared, settings)
+- [x] JWT auth 미들웨어 작성
+- [x] **테스트:** 서버 로컬 기동 및 `/api/health` → `200 OK` 확인 ✅
 
 ---
 
-### S2️⃣ Neon PostgreSQL 스키마 생성 ⏳
-- [ ] Neon 프로젝트 생성 및 연결 문자열 확보
-- [ ] `users` 테이블 생성
-- [ ] `ledgers` 테이블 생성
-- [ ] `transactions` 테이블 생성
-- [ ] `categories` 테이블 생성
-- [ ] `shared_ledgers` 테이블 생성
-- [ ] `system_settings` 테이블 생성 (동적 로그인 모드)
-- [ ] `user_notification_apps` 테이블 생성
-- **테스트:** Neon 콘솔에서 테이블 생성 확인
+### S2️⃣ Neon PostgreSQL 스키마 생성 ✅ (SQL 파일 준비 완료)
+- [x] `server/db/schema.sql` 작성 완료 (Neon에 직접 실행하면 됨)
+- [x] `users` 테이블
+- [x] `ledgers` 테이블
+- [x] `transactions` 테이블
+- [x] `categories` 테이블
+- [x] `shared_ledgers` 테이블
+- [x] `system_settings` 테이블 (login_required 기본값 포함)
+- [x] 성능 인덱스 4개 정의
+- [ ] **테스트:** Neon 커넥션 string 받은 후 콘솔에서 실행 확인 ⏳ (커넥션 string 대기 중)
 
 ---
 
@@ -174,19 +465,20 @@
 ---
 
 ### S6️⃣ 동기화 API ⏳
-- [ ] `POST /api/sync` - Delta sync (마지막 동기화 시간 이후 변경분 반환)
-- [ ] `POST /api/sync/batch` - 클라이언트 변경사항 일괄 업로드
+- [ ] `GET /api/sync/delta?since={timestamp}` - Delta sync
+- [ ] `POST /api/sync/push` - 클라이언트 변경사항 일괄 업로드
 - [ ] 충돌 해결 로직 (타임스탬프 기반 최신 우선)
-- [ ] 동기화 상태 필드 관리 (`syncStatus`: synced / pending / conflict)
+- [ ] 동기화 상태 필드 관리 (`sync_status`: synced / pending / conflict)
 - **테스트:** 오프라인 변경 후 동기화 시 데이터 정합성 확인
 
 ---
 
 ### S7️⃣ 공유 장부 API ⏳
-- [ ] `POST /api/ledgers/:ledgerId/share` - 사용자 초대 (이메일로 검색)
+- [ ] `POST /api/shared-ledgers` - 사용자 초대 (이메일로 검색)
 - [ ] `PATCH /api/shared-ledgers/:id` - 권한 변경 (view/edit)
 - [ ] `DELETE /api/shared-ledgers/:id` - 공유 해제
 - [ ] `GET /api/ledgers/shared` - 나와 공유된 장부 목록 조회
+- [ ] `GET /api/users/search?email=` - 이메일로 사용자 검색
 - **테스트:** 초대 → 권한 변경 → 해제 흐름 확인
 
 ---
@@ -202,10 +494,12 @@
 
 ## 📝 마지막 업데이트
 
-**2026-04-05** | Phase 1 완료 — 10단계 Hilt DI까지 모든 Android 앱 기반 작업 완료
+**2026-04-05** | Phase 1 완료 (Android 앱 인프라 구축 — 10단계 Hilt DI까지)  
+**2026-04-05** | 백엔드 S1 완료 (Node.js 서버 초기 설정, 로컬 기동 확인)  
+**2026-04-05** | 백엔드 S2 완료 (schema.sql 작성 완료 — Neon 커넥션 string 대기 중)
 
 ---
 
 ## 🎯 다음 단계
 
-**1단계 완료 후:** 사용자 승인 → 3단계 (sample 폴더에서 프로젝트 복사) → 4단계 (구현 시작)
+**다음 단계:** 백엔드 S3 (이메일 인증 API) — Neon 커넥션 string 제공 후 진행
