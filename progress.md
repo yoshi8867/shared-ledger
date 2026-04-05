@@ -7,17 +7,17 @@
 
 ## 📊 전체 진행도
 
-░░░░░░░░░░░░░░░░░░░░ 0% (0/10)
+██░░░░░░░░░░░░░░░░░░ 10% (1/10)
 
 ---
 
 ## 📋 단위 작업 목록
 
-### 1️⃣ 프로젝트 초기 설정 ⏳
-- [ ] build.gradle.kts (앱 수준) 작성
-- [ ] AndroidManifest.xml 기본 설정
-- [ ] 폴더 구조 생성 (ui, data, domain 등)
-- [ ] 필수 의존성 추가 (Compose, Room, Retrofit, Hilt)
+### 1️⃣ 프로젝트 초기 설정 ✅
+- [x] build.gradle.kts (앱 수준) 작성
+- [x] AndroidManifest.xml 기본 설정
+- [x] 폴더 구조 생성 (ui, data, domain 등)
+- [x] 필수 의존성 추가 (Compose, Room, Retrofit, Hilt)
 - **테스트:** 앱 빌드 성공 여부
 
 ---
@@ -106,7 +106,7 @@
 
 ## 📝 마지막 업데이트
 
-**2026-04-05 20:35** | Phase 1 단위 작업 분할 완료
+**2026-04-05 20:50** | Phase 1-1 프로젝트 초기 설정 완료
 
 ---
 
