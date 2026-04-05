@@ -7,7 +7,7 @@
 
 ## 📊 전체 진행도
 
-████░░░░░░░░░░░░░░░░ 20% (2/10)
+██████░░░░░░░░░░░░░░ 30% (3/10)
 
 ---
 
@@ -32,11 +32,11 @@
 
 ---
 
-### 3️⃣ 테마 시스템 구축 (다크) ⏳
-- [ ] Color.kt에 다크 모드 색상 추가
-- [ ] Theme.kt에 DarkTheme Composable 추가
-- [ ] 시스템 기본 테마 감지 (isSystemInDarkTheme)
-- **테스트:** 라이트/다크 모드 전환 확인
+### 3️⃣ 테마 시스템 구축 (다크) ✅
+- [x] Color.kt에 다크 모드 색상 추가
+- [x] Theme.kt에 DarkTheme Composable 추가
+- [x] 시스템 기본 테마 감지 (isSystemInDarkTheme)
+- [x] **테스트:** 라이트/다크 모드 Preview 확인 ✅
 
 ---
 
