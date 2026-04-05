@@ -3,8 +3,8 @@ plugins {
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.ksp)
-    alias(libs.plugins.hilt.android)
-    alias(libs.plugins.google.gms.google.services)
+    // alias(libs.plugins.hilt.android)
+    // alias(libs.plugins.google.gms.google.services)
 }
 
 android {
@@ -74,20 +74,20 @@ dependencies {
     implementation(libs.okhttp.logging.interceptor)
 
     // Hilt (Dependency Injection)
-    implementation(libs.hilt.android)
-    ksp(libs.hilt.compiler)
-    implementation(libs.hilt.navigation.compose)
+    // implementation(libs.hilt.android)
+    // ksp(libs.hilt.compiler)
+    // implementation(libs.hilt.navigation.compose)
 
     // Coroutines
     implementation(libs.kotlinx.coroutines.core)
     implementation(libs.kotlinx.coroutines.android)
 
     // Firebase
-    implementation(platform(libs.firebase.bom))
-    implementation(libs.firebase.messaging)
+    // implementation(platform(libs.firebase.bom))
+    // implementation(libs.firebase.messaging)
 
     // OAuth
-    implementation(libs.play.services.auth)
+    // implementation(libs.play.services.auth)
 
     // Testing
     testImplementation(libs.junit)
