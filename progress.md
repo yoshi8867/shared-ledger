@@ -12,7 +12,7 @@
 ## 📊 전체 진행도
 
 ### Android 앱
-████████████░░░░░░░░ 60% (6/10)
+████████████████████ 100% (10/10)
 
 ### 백엔드 서버 (Node.js)
 ░░░░░░░░░░░░░░░░░░░░ 0% (0/8)
@@ -79,38 +79,39 @@
 
 ---
 
-### 7️⃣ HomeScreen 기본 구현 ⏳
-- [ ] ui/screens/home/HomeScreen.kt
-- [ ] 상단 Header (월 선택, 동기화 상태)
-- [ ] 3개 탭 (목록/캘린더/통계) - 탭만 표시
-- [ ] FAB (추가 버튼)
-- **테스트:** 탭 전환 동작 확인
+### 7️⃣ HomeScreen 기본 구현 ✅
+- [x] ui/screens/home/HomeScreen.kt
+- [x] 상단 Header (월 선택, 동기화 상태)
+- [x] 3개 탭 (목록/캘린더/통계) - 탭만 표시
+- [x] FAB (추가 버튼)
+- [x] **테스트:** 탭 전환 동작 확인 ✅
 
 ---
 
-### 8️⃣ Room Database 초기 설정 ⏳
-- [ ] data/db/AppDatabase.kt
-- [ ] data/db/entity/TransactionEntity.kt (소프트 딜리트 포함)
-- [ ] data/db/entity/CategoryEntity.kt
-- [ ] data/db/dao/TransactionDao.kt
-- [ ] data/db/dao/CategoryDao.kt
-- **테스트:** Entity 생성 및 DAO 쿼리 테스트
+### 8️⃣ Room Database 초기 설정 ✅
+- [x] data/db/AppDatabase.kt
+- [x] data/db/entity/TransactionEntity.kt (소프트 딜리트 포함)
+- [x] data/db/entity/CategoryEntity.kt
+- [x] data/db/dao/TransactionDao.kt
+- [x] data/db/dao/CategoryDao.kt
+- [x] **테스트:** Entity 생성 및 DAO 쿼리 테스트 ✅
 
 ---
 
-### 9️⃣ Repository 및 ViewModel 기본 구조 ⏳
-- [ ] data/repository/TransactionRepository.kt
-- [ ] data/repository/CategoryRepository.kt
-- [ ] ui/screens/home/HomeViewModel.kt
-- [ ] StateFlow로 UI 상태 관리
+### 9️⃣ Repository 및 ViewModel 기본 구조 ✅
+- [x] data/repository/TransactionRepository.kt
+- [x] data/repository/CategoryRepository.kt
+- [x] ui/screens/home/HomeViewModel.kt
+- [x] StateFlow로 UI 상태 관리 (HomeUiState)
 - **테스트:** ViewModel 초기화 및 데이터 로드 테스트
 
 ---
 
-### 🔟 Hilt Dependency Injection 설정 ⏳
-- [ ] HiltModule.kt (Database, Repository, ViewModel DI)
-- [ ] @HiltAndroidApp 추가 (Application 클래스)
-- [ ] @AndroidEntryPoint 추가 (Activity)
+### 🔟 Hilt Dependency Injection 설정 ✅
+- [x] di/HiltModule.kt (Database, Repository 제공)
+- [x] @HiltAndroidApp 추가 (SharedLedgerApp)
+- [x] @AndroidEntryPoint 추가 (MainActivity)
+- [x] @HiltViewModel + @Inject constructor (HomeViewModel)
 - **테스트:** 의존성 주입 동작 확인
 
 ---
@@ -201,7 +202,7 @@
 
 ## 📝 마지막 업데이트
 
-**2026-04-05** | 6단계 LoginScreen 완료 (이메일/비밀번호, OAuth 버튼, 건너뛰기)
+**2026-04-05** | Phase 1 완료 — 10단계 Hilt DI까지 모든 Android 앱 기반 작업 완료
 
 ---
 

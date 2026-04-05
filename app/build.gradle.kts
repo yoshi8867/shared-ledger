@@ -3,7 +3,7 @@ plugins {
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.ksp)
-    // alias(libs.plugins.hilt.android)
+    alias(libs.plugins.hilt.android)
     // alias(libs.plugins.google.gms.google.services)
 }
 
@@ -50,6 +50,7 @@ dependencies {
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.androidx.lifecycle.viewmodel.compose)
+    implementation(libs.androidx.lifecycle.runtime.compose)
     implementation(libs.androidx.activity.compose)
 
     // Compose
@@ -75,9 +76,9 @@ dependencies {
     implementation(libs.okhttp.logging.interceptor)
 
     // Hilt (Dependency Injection)
-    // implementation(libs.hilt.android)
-    // ksp(libs.hilt.compiler)
-    // implementation(libs.hilt.navigation.compose)
+    implementation(libs.hilt.android)
+    ksp(libs.hilt.compiler)
+    implementation(libs.hilt.navigation.compose)
 
     // Coroutines
     implementation(libs.kotlinx.coroutines.core)
