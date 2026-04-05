@@ -7,7 +7,7 @@
 
 ## 📊 전체 진행도
 
-██░░░░░░░░░░░░░░░░░░ 10% (1/10)
+████░░░░░░░░░░░░░░░░ 20% (2/10)
 
 ---
 
@@ -23,12 +23,12 @@
 
 ---
 
-### 2️⃣ 테마 시스템 구축 (라이트) ⏳
-- [ ] ui/theme/Color.kt (라이트 모드 색상 정의)
-- [ ] ui/theme/Typography.kt (타이포그래피)
-- [ ] ui/theme/Theme.kt (LightTheme Composable)
-- [ ] 색상 시스템: Indigo 기반 Primary, Secondary, Tertiary 정의
-- **테스트:** 색상/타이포그래피 Preview 확인
+### 2️⃣ 테마 시스템 구축 (라이트/다크) ✅
+- [x] ui/theme/Color.kt (라이트/다크 모드 색상 정의)
+- [x] ui/theme/Type.kt (MD3 완전한 타이포그래피)
+- [x] ui/theme/Theme.kt (LightTheme & DarkTheme Composable)
+- [x] 색상 시스템: Indigo 기반 Primary, Secondary(Teal), Tertiary(Purple) 정의
+- [x] **테스트:** 색상/타이포그래피 Preview 확인 ✅
 
 ---
 
@@ -107,7 +107,7 @@
 
 ## 📝 마지막 업데이트
 
-**2026-04-05** | Phase 1-1 프로젝트 초기 설정 완료, 앱 빌드 및 설치 성공 ✅
+**2026-04-05** | 2단계 테마 시스템 완료 (Indigo 기반 색상 팔레트 + MD3 타이포그래피)
 
 ---
 
