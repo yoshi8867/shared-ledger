@@ -17,8 +17,9 @@
 - [x] build.gradle.kts (앱 수준) 작성
 - [x] AndroidManifest.xml 기본 설정
 - [x] 폴더 구조 생성 (ui, data, domain 등)
-- [x] 필수 의존성 추가 (Compose, Room, Retrofit, Hilt)
-- **테스트:** 앱 빌드 성공 여부
+- [x] 필수 의존성 추가 (Compose, Room, Retrofit)
+- [x] **테스트:** 앱 빌드 및 설치 성공 ✅
+- [x] GitHub에 push 완료
 
 ---
 
@@ -106,7 +107,7 @@
 
 ## 📝 마지막 업데이트
 
-**2026-04-05 20:50** | Phase 1-1 프로젝트 초기 설정 완료
+**2026-04-05** | Phase 1-1 프로젝트 초기 설정 완료, 앱 빌드 및 설치 성공 ✅
 
 ---
 
