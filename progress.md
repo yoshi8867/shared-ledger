@@ -13,7 +13,7 @@
 ## 📊 전체 진행도
 
 ### Android 앱
-██████░░░░░░░░░░░░░░ 31% (24/77) — Phase 1~3 완료, Phase 4~8 미시작
+███████░░░░░░░░░░░░░ 36% (28/77) — Phase 1~3 완료, Phase 4-1·4-2 완료
 
 ### 백엔드 서버 (Node.js)
 ████████░░░░░░░░░░░░ 50% (S1~S3, S5 완료, S4·S6~S8 미시작)
@@ -227,26 +227,29 @@
 
 ---
 
-### Phase 4 — 목록형 / 캘린더형 / 통계형 뷰 구현 ⏳
+### Phase 4 — 목록형 / 캘린더형 / 통계형 뷰 구현 🔄
 
-#### 1️⃣ ListViewTab 구현 ⏳
-- [ ] ui/screens/home/ListViewTab.kt
-- [ ] 날짜별 그룹핑 (LazyColumn + stickyHeader)
-- [ ] ui/components/TransactionItem.kt — 금액, 구분, 내용 표시
-- [ ] 항목 클릭 → TransactionEditScreen (수정 모드)
-- [ ] 빈 목록 안내 문구
-- [ ] **테스트:** 거래 목록 표시 및 클릭 이동 확인
+#### 1️⃣ ListViewTab 구현 ✅
+- [x] ui/screens/home/ListViewTab.kt
+- [x] 날짜별 그룹핑 (LazyColumn + stickyHeader)
+- [x] ui/components/TransactionItem.kt — 금액, 구분, 내용 표시
+- [x] 항목 클릭 → TransactionEditScreen (수정 모드)
+- [x] 빈 목록 안내 문구
+- [ ] **테스트:** 거래 목록 표시 및 클릭 이동 확인 ⏳ (사용자 테스트 필요)
 
 ---
 
-#### 2️⃣ CalendarViewTab 구현 ⏳
-- [ ] ui/screens/home/CalendarViewTab.kt
-- [ ] ui/components/CalendarComposable.kt — 커스텀 달력 그리드
-- [ ] 날짜 셀에 수입(파랑) / 지출(빨강) 총합 숫자 표시
-- [ ] 날짜 선택 시 해당 날짜 거래 목록 표시 (하단 슬라이드)
-- [ ] "[+ 추가]" 버튼 (선택된 날짜 기반 TransactionEditScreen 이동)
-- [ ] MonthSelectorBar 연동 (캘린더 자체엔 월 이동 없음)
-- [ ] **테스트:** 날짜 선택, 거래 지표 표시, 추가 이동 확인
+#### 2️⃣ CalendarViewTab 구현 ✅
+- [x] ui/screens/home/CalendarViewTab.kt
+- [x] ui/components/CalendarComposable.kt — 커스텀 달력 그리드 (7열, 요일 헤더)
+- [x] 날짜 셀에 수입(빨강) / 지출(파랑) 총합 숫자 표시 (단위 축약: 만/천)
+- [x] 오늘 날짜 강조 (secondary 원), 선택된 날짜 강조 (primary 원)
+- [x] 날짜 선택 시 해당 날짜 거래 목록 표시 (하단 인라인)
+- [x] "[+ 추가]" 버튼 → 선택된 날짜 기반 TransactionEditScreen 이동
+- [x] Routes/AppNavigation에 dateMillis 파라미터 추가
+- [x] TransactionEditViewModel/Screen에서 dateMillis 초기 날짜 반영
+- [x] MonthSelectorBar 연동 (월 변경 시 선택일 자동 리셋)
+- [ ] **테스트:** 날짜 선택, 거래 지표 표시, 추가 이동 확인 ⏳ (사용자 테스트 필요)
 
 ---
 
@@ -499,9 +502,11 @@
 **2026-04-06** | 백엔드 S5 완료 (거래/카테고리 CRUD API — 37/37 테스트 통과)  
 **2026-04-06** | Android Phase 2 완료 (DataStore JWT 인증 + Retrofit + AuthViewModel + SignupScreen + SplashScreen 자동 로그인)  
 **2026-04-06** | Android Phase 3 완료 (거래 CRUD UI — TransactionEditScreen + CategoryDialog + MonthSelectorBar + ListViewTab)
+**2026-04-06** | Android Phase 4-1 완료 (ListViewTab — Phase 3에서 이미 구현됨, progress 반영)
+**2026-04-06** | Android Phase 4-2 완료 (CalendarViewTab + CalendarComposable + dateMillis 네비게이션 연동)
 
 ---
 
 ## 🎯 다음 단계
 
-**다음 단계:** Android Phase 4 (CalendarViewTab / StatisticViewTab) 또는 백엔드 S6 (Delta 동기화 API)
+**다음 단계:** Android Phase 4-3 (StatisticViewTab — BarChart + PieChart) 또는 백엔드 S6 (Delta 동기화 API)

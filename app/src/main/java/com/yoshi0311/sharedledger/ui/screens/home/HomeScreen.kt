@@ -1,17 +1,12 @@
 package com.yoshi0311.sharedledger.ui.screens.home
 
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.CalendarMonth
@@ -22,7 +17,6 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -44,16 +38,14 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.yoshi0311.sharedledger.data.db.entity.TransactionEntity
 import com.yoshi0311.sharedledger.ui.components.MonthSelectorBar
 import java.text.NumberFormat
-import java.text.SimpleDateFormat
 import java.util.Locale
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomeScreen(
-    onNavigateToTransactionEdit: (Long) -> Unit = {},
+    onNavigateToTransactionEdit: (id: Long, dateMillis: Long) -> Unit = { _, _ -> },
     viewModel: HomeViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
@@ -87,7 +79,7 @@ fun HomeScreen(
         },
         floatingActionButton = {
             FloatingActionButton(
-                onClick = { onNavigateToTransactionEdit(-1L) },
+                onClick = { onNavigateToTransactionEdit(-1L, -1L) },
                 containerColor = MaterialTheme.colorScheme.primary
             ) {
                 Icon(
@@ -130,17 +122,22 @@ fun HomeScreen(
 
             // 탭 콘텐츠
             when (selectedTab) {
-                0 -> TransactionListTab(
+                0 -> ListViewTab(
                     transactions = uiState.transactions,
                     categories = uiState.categories,
                     isLoading = uiState.isLoading,
-                    onTransactionClick = { tx -> onNavigateToTransactionEdit(tx.id) }
+                    onTransactionClick = { tx -> onNavigateToTransactionEdit(tx.id, -1L) }
                 )
-                1 -> Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                    Text("캘린더 (Phase 4 구현 예정)", color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.4f))
-                }
+                1 -> CalendarViewTab(
+                    yearMonth = selectedMonth,
+                    transactions = uiState.transactions,
+                    categories = uiState.categories,
+                    isLoading = uiState.isLoading,
+                    onTransactionClick = { tx -> onNavigateToTransactionEdit(tx.id, -1L) },
+                    onAddTransaction = { dateMillis -> onNavigateToTransactionEdit(-1L, dateMillis) }
+                )
                 2 -> Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                    Text("통계 (Phase 4 구현 예정)", color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.4f))
+                    Text("통계 (Phase 4-3 구현 예정)", color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.4f))
                 }
             }
         }
@@ -191,80 +188,3 @@ private fun SummaryCard(totalIncome: Long, totalExpense: Long) {
     }
 }
 
-@Composable
-private fun TransactionListTab(
-    transactions: List<TransactionEntity>,
-    categories: List<com.yoshi0311.sharedledger.data.db.entity.CategoryEntity>,
-    isLoading: Boolean,
-    onTransactionClick: (TransactionEntity) -> Unit
-) {
-    if (isLoading) {
-        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-            Text("불러오는 중...", color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.4f))
-        }
-        return
-    }
-
-    if (transactions.isEmpty()) {
-        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-            Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                Text("이 달의 거래가 없습니다", style = MaterialTheme.typography.bodyLarge, color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.4f))
-                Text("+ 버튼으로 추가해보세요", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.3f))
-            }
-        }
-        return
-    }
-
-    val categoryMap = categories.associateBy { it.id }
-    val fmt = NumberFormat.getNumberInstance(Locale.KOREA)
-    val dateFormat = SimpleDateFormat("MM/dd", Locale.getDefault())
-
-    // 날짜별 그룹핑
-    val grouped = transactions.groupBy { dateFormat.format(it.date) }
-
-    LazyColumn(modifier = Modifier.fillMaxSize()) {
-        grouped.forEach { (dateStr, txList) ->
-            item {
-                Text(
-                    text = dateStr,
-                    style = MaterialTheme.typography.labelMedium,
-                    color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.5f),
-                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 6.dp)
-                )
-            }
-            items(txList) { tx ->
-                val cat = categoryMap[tx.categoryId]
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .clickable { onTransactionClick(tx) }
-                        .padding(horizontal = 16.dp, vertical = 10.dp),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Column(modifier = Modifier.weight(1f)) {
-                        Text(
-                            text = tx.description.ifBlank { cat?.name ?: "내역 없음" },
-                            style = MaterialTheme.typography.bodyMedium
-                        )
-                        if (cat != null) {
-                            Text(
-                                text = cat.name,
-                                style = MaterialTheme.typography.labelSmall,
-                                color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.5f)
-                            )
-                        }
-                    }
-                    Text(
-                        text = "${if (tx.type == "income") "+" else "-"}${fmt.format(tx.amount)}원",
-                        style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.SemiBold),
-                        color = if (tx.type == "income") Color(0xFFF44336) else Color(0xFF2196F3)
-                    )
-                }
-                HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp))
-            }
-            item { Spacer(modifier = Modifier.height(4.dp)) }
-        }
-        item { Spacer(modifier = Modifier.height(80.dp)) } // FAB 공간
-    }
-}

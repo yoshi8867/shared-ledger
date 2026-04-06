@@ -62,8 +62,8 @@ fun AppNavigation(
 
         composable(Routes.Home.route) {
             HomeScreen(
-                onNavigateToTransactionEdit = { id ->
-                    navController.navigate(Routes.TransactionEdit.createRoute(id))
+                onNavigateToTransactionEdit = { id, dateMillis ->
+                    navController.navigate(Routes.TransactionEdit.createRoute(id, dateMillis))
                 }
             )
         }
@@ -72,6 +72,10 @@ fun AppNavigation(
             route = Routes.TransactionEdit.route,
             arguments = listOf(
                 navArgument("id") {
+                    type = NavType.LongType
+                    defaultValue = -1L
+                },
+                navArgument("dateMillis") {
                     type = NavType.LongType
                     defaultValue = -1L
                 }

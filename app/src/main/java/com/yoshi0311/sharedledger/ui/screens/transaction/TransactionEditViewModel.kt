@@ -32,6 +32,7 @@ class TransactionEditViewModel @Inject constructor(
 
     private val currentLedgerId = 1L
     val transactionId: Long = savedStateHandle.get<Long>("id") ?: -1L
+    val initialDateMillis: Long = savedStateHandle.get<Long>("dateMillis") ?: -1L
 
     private val _uiState = MutableStateFlow(TransactionEditUiState())
     val uiState: StateFlow<TransactionEditUiState> = _uiState.asStateFlow()

@@ -78,7 +78,11 @@ fun TransactionEditScreen(
 
     var type by remember { mutableStateOf("expense") }
     var amountRaw by remember { mutableStateOf("") }          // 실제 숫자 문자열
-    var selectedDate by remember { mutableStateOf(Date()) }
+    var selectedDate by remember {
+        mutableStateOf(
+            if (viewModel.initialDateMillis > 0) Date(viewModel.initialDateMillis) else Date()
+        )
+    }
     var selectedHour by remember { mutableStateOf(nowCal.get(Calendar.HOUR_OF_DAY)) }
     var selectedMinute by remember { mutableStateOf(nowCal.get(Calendar.MINUTE)) }
     var description by remember { mutableStateOf("") }
