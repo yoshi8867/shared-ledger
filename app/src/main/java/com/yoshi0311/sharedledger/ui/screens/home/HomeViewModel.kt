@@ -16,6 +16,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.stateIn
+import java.util.Calendar
 import javax.inject.Inject
 
 data class HomeUiState(
@@ -34,6 +35,18 @@ class HomeViewModel @Inject constructor(
 
     // 추후 공유 장부 지원 시 동적으로 변경
     private val currentLedgerId = 1L
+
+    // 탭 선택 상태 — HomeScreen 재구성 후에도 유지
+    private val _selectedTab = MutableStateFlow(0)
+    val selectedTab: StateFlow<Int> = _selectedTab.asStateFlow()
+    fun selectTab(tab: Int) { _selectedTab.value = tab }
+
+    // 캘린더 선택 날짜 — 오늘로 초기화, 월 변경 시 null 리셋
+    private val _selectedCalendarDay = MutableStateFlow<Int?>(
+        Calendar.getInstance().get(Calendar.DAY_OF_MONTH)
+    )
+    val selectedCalendarDay: StateFlow<Int?> = _selectedCalendarDay.asStateFlow()
+    fun selectCalendarDay(day: Int) { _selectedCalendarDay.value = day }
 
     private val _selectedMonth = MutableStateFlow(AppYearMonth.now())
     val selectedMonth: StateFlow<AppYearMonth> = _selectedMonth.asStateFlow()
@@ -62,6 +75,12 @@ class HomeViewModel @Inject constructor(
             initialValue = HomeUiState()
         )
 
-    fun nextMonth() { _selectedMonth.value = _selectedMonth.value.next() }
-    fun prevMonth() { _selectedMonth.value = _selectedMonth.value.prev() }
+    fun nextMonth() {
+        _selectedMonth.value = _selectedMonth.value.next()
+        _selectedCalendarDay.value = null
+    }
+    fun prevMonth() {
+        _selectedMonth.value = _selectedMonth.value.prev()
+        _selectedCalendarDay.value = null
+    }
 }

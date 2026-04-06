@@ -13,7 +13,7 @@
 ## 📊 전체 진행도
 
 ### Android 앱
-███████░░░░░░░░░░░░░ 36% (28/77) — Phase 1~3 완료, Phase 4-1·4-2 완료
+████████░░░░░░░░░░░░ 40% (31/77) — Phase 1~3 완료, Phase 4 완료
 
 ### 백엔드 서버 (Node.js)
 ████████░░░░░░░░░░░░ 50% (S1~S3, S5 완료, S4·S6~S8 미시작)
@@ -253,13 +253,14 @@
 
 ---
 
-#### 3️⃣ StatisticViewTab 구현 ⏳
-- [ ] ui/screens/home/StatisticViewTab.kt
-- [ ] ui/components/BarChart.kt — 카테고리별 막대 그래프
-- [ ] ui/components/PieChart.kt — 지출 비중 원형 차트
-- [ ] 월별 수입 합계 / 지출 합계 요약 카드
-- [ ] 수입/지출 탭 전환 (Segmented Button)
-- [ ] **테스트:** 차트 렌더링 및 데이터 연동 확인
+#### 3️⃣ StatisticViewTab 구현 ✅
+- [x] ui/screens/home/StatisticViewTab.kt
+- [x] ui/components/BarChart.kt — 카테고리별 수평 막대 그래프 (비율 포함)
+- [x] ui/components/PieChart.kt — 도넛형 원형 차트 (Canvas 직접 구현)
+- [x] 월별 수입/지출 합계 요약 (headlineSmall 표시)
+- [x] 수입/지출 탭 전환 (SingleChoiceSegmentedButtonRow)
+- [x] CategoryStat 데이터 모델 + computeCategoryStats() 함수
+- [ ] **테스트:** 차트 렌더링 및 데이터 연동 확인 ⏳ (사용자 테스트 필요)
 
 ---
 
@@ -504,9 +505,10 @@
 **2026-04-06** | Android Phase 3 완료 (거래 CRUD UI — TransactionEditScreen + CategoryDialog + MonthSelectorBar + ListViewTab)
 **2026-04-06** | Android Phase 4-1 완료 (ListViewTab — Phase 3에서 이미 구현됨, progress 반영)
 **2026-04-06** | Android Phase 4-2 완료 (CalendarViewTab + CalendarComposable + dateMillis 네비게이션 연동)
+**2026-04-06** | Android Phase 4-3 완료 (StatisticViewTab + PieChart(도넛) + BarChart + 수입/지출 탭 전환)
 
 ---
 
 ## 🎯 다음 단계
 
-**다음 단계:** Android Phase 4-3 (StatisticViewTab — BarChart + PieChart) 또는 백엔드 S6 (Delta 동기화 API)
+**다음 단계:** Android Phase 5 (Push 알림 자동입력 / SMS) 또는 백엔드 S6 (Delta 동기화 API)

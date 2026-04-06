@@ -1,7 +1,6 @@
 package com.yoshi0311.sharedledger.ui.screens.home
 
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
@@ -28,9 +27,7 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -40,6 +37,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.yoshi0311.sharedledger.ui.components.MonthSelectorBar
 import java.text.NumberFormat
+import java.util.Calendar
 import java.util.Locale
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -50,13 +48,25 @@ fun HomeScreen(
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val selectedMonth by viewModel.selectedMonth.collectAsStateWithLifecycle()
-    var selectedTab by remember { mutableIntStateOf(0) }
+    val selectedTab by viewModel.selectedTab.collectAsStateWithLifecycle()
+    val selectedCalendarDay by viewModel.selectedCalendarDay.collectAsStateWithLifecycle()
+
     val tabs = listOf("목록", "캘린더", "통계")
     val tabIcons = listOf(
         Icons.Filled.List,
         Icons.Filled.CalendarMonth,
         Icons.Filled.PieChart
     )
+
+    // 오늘 날짜 계산 (캘린더 탭용)
+    val today = remember { Calendar.getInstance() }
+    val isCurrentMonth = selectedMonth.year == today.get(Calendar.YEAR) &&
+            selectedMonth.month == today.get(Calendar.MONTH) + 1
+    val todayDay = if (isCurrentMonth) today.get(Calendar.DAY_OF_MONTH) else -1
+
+    // 캘린더 탭에서 표시할 선택 날짜: ViewModel 값이 없으면 오늘(현재월) 또는 null
+    val effectiveCalendarDay = selectedCalendarDay
+        ?: if (isCurrentMonth) todayDay else null
 
     Scaffold(
         topBar = {
@@ -95,32 +105,28 @@ fun HomeScreen(
                 .fillMaxSize()
                 .padding(innerPadding)
         ) {
-            // 월 선택 바
             MonthSelectorBar(
                 currentMonth = selectedMonth,
                 onPrev = { viewModel.prevMonth() },
                 onNext = { viewModel.nextMonth() }
             )
 
-            // 수입/지출 요약 카드
             SummaryCard(
                 totalIncome = uiState.totalIncome,
                 totalExpense = uiState.totalExpense
             )
 
-            // 탭 바
             TabRow(selectedTabIndex = selectedTab) {
                 tabs.forEachIndexed { index, title ->
                     Tab(
                         selected = selectedTab == index,
-                        onClick = { selectedTab = index },
+                        onClick = { viewModel.selectTab(index) },
                         text = { Text(title, style = MaterialTheme.typography.labelLarge) },
                         icon = { Icon(imageVector = tabIcons[index], contentDescription = title) }
                     )
                 }
             }
 
-            // 탭 콘텐츠
             when (selectedTab) {
                 0 -> ListViewTab(
                     transactions = uiState.transactions,
@@ -133,12 +139,18 @@ fun HomeScreen(
                     transactions = uiState.transactions,
                     categories = uiState.categories,
                     isLoading = uiState.isLoading,
-                    onTransactionClick = { tx -> onNavigateToTransactionEdit(tx.id, -1L) },
-                    onAddTransaction = { dateMillis -> onNavigateToTransactionEdit(-1L, dateMillis) }
+                    selectedDay = effectiveCalendarDay,
+                    todayDay = todayDay,
+                    onDaySelected = { viewModel.selectCalendarDay(it) },
+                    onTransactionClick = { tx -> onNavigateToTransactionEdit(tx.id, -1L) }
                 )
-                2 -> Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                    Text("통계 (Phase 4-3 구현 예정)", color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.4f))
-                }
+                2 -> StatisticViewTab(
+                    transactions = uiState.transactions,
+                    categories = uiState.categories,
+                    totalIncome = uiState.totalIncome,
+                    totalExpense = uiState.totalExpense,
+                    isLoading = uiState.isLoading
+                )
             }
         }
     }
@@ -187,4 +199,3 @@ private fun SummaryCard(totalIncome: Long, totalExpense: Long) {
         }
     }
 }
-

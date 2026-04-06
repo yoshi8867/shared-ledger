@@ -1,6 +1,7 @@
 package com.yoshi0311.sharedledger.ui.components
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -11,7 +12,6 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -28,6 +28,8 @@ import androidx.compose.ui.unit.sp
 import com.yoshi0311.sharedledger.data.db.entity.TransactionEntity
 import com.yoshi0311.sharedledger.util.AppYearMonth
 import java.util.Calendar
+
+private const val CELL_HEIGHT_DP = 58
 
 @Composable
 fun CalendarComposable(
@@ -58,7 +60,7 @@ fun CalendarComposable(
     val cal = Calendar.getInstance().apply { set(yearMonth.year, yearMonth.month - 1, 1) }
     val firstDayOfWeek = cal.get(Calendar.DAY_OF_WEEK) // 1=Sun … 7=Sat
     val daysInMonth = cal.getActualMaximum(Calendar.DAY_OF_MONTH)
-    val offset = firstDayOfWeek - 1 // 0=Sun offset
+    val offset = firstDayOfWeek - 1
 
     val dayHeaders = listOf("일", "월", "화", "수", "목", "금", "토")
 
@@ -86,7 +88,12 @@ fun CalendarComposable(
                 for (col in 0 until 7) {
                     val day = row * 7 + col - offset + 1
                     if (day < 1 || day > daysInMonth) {
-                        Box(modifier = Modifier.weight(1f).height(CELL_HEIGHT_DP.dp))
+                        // 빈 셀 — 테두리 없음
+                        Box(
+                            modifier = Modifier
+                                .weight(1f)
+                                .height(CELL_HEIGHT_DP.dp)
+                        )
                     } else {
                         DayCell(
                             day = day,
@@ -106,8 +113,6 @@ fun CalendarComposable(
     }
 }
 
-private const val CELL_HEIGHT_DP = 58
-
 @Composable
 private fun DayCell(
     day: Int,
@@ -125,42 +130,42 @@ private fun DayCell(
         isSunday || isSaturday -> Color(0xFFE57373)
         else -> MaterialTheme.colorScheme.onSurface
     }
+    val cellBorderColor = Color(0xFFE0E0E0)
+    val selectedBg = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.4f)
 
-    Column(
+    Box(
         modifier = modifier
             .height(CELL_HEIGHT_DP.dp)
-            .clip(RoundedCornerShape(4.dp))
-            .then(
-                if (isSelected) Modifier.background(MaterialTheme.colorScheme.primaryContainer)
-                else Modifier
-            )
+            .border(0.5.dp, cellBorderColor)
+            .then(if (isSelected) Modifier.background(selectedBg) else Modifier)
             .clickable(onClick = onClick)
-            .padding(vertical = 3.dp, horizontal = 1.dp),
-        horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        // Day number circle
+        // 날짜 숫자 — 좌상단
         Box(
             contentAlignment = Alignment.Center,
-            modifier = Modifier.size(22.dp)
+            modifier = Modifier
+                .align(Alignment.TopStart)
+                .padding(start = 4.dp, top = 4.dp)
+                .size(20.dp)
         ) {
             if (isSelected) {
                 Box(
                     modifier = Modifier
-                        .size(22.dp)
+                        .size(20.dp)
                         .clip(CircleShape)
                         .background(MaterialTheme.colorScheme.primary)
                 )
             } else if (isToday) {
                 Box(
                     modifier = Modifier
-                        .size(22.dp)
+                        .size(20.dp)
                         .clip(CircleShape)
                         .background(MaterialTheme.colorScheme.secondaryContainer)
                 )
             }
             Text(
                 text = day.toString(),
-                style = MaterialTheme.typography.labelMedium.copy(
+                style = MaterialTheme.typography.labelSmall.copy(
                     fontSize = 11.sp,
                     fontWeight = if (isSelected || isToday) FontWeight.Bold else FontWeight.Normal
                 ),
@@ -168,10 +173,13 @@ private fun DayCell(
                 textAlign = TextAlign.Center
             )
         }
-        // Income amount row (fixed height)
-        Box(
-            modifier = Modifier.fillMaxWidth().height(16.dp),
-            contentAlignment = Alignment.Center
+
+        // 금액 — 우하단 (수입 위, 지출 아래)
+        Column(
+            modifier = Modifier
+                .align(Alignment.BottomEnd)
+                .padding(end = 3.dp, bottom = 3.dp),
+            horizontalAlignment = Alignment.End
         ) {
             if ((income ?: 0L) > 0) {
                 Text(
@@ -179,24 +187,16 @@ private fun DayCell(
                     style = MaterialTheme.typography.labelSmall.copy(fontSize = 8.sp),
                     color = Color(0xFFF44336),
                     maxLines = 1,
-                    overflow = TextOverflow.Clip,
-                    textAlign = TextAlign.Center
+                    overflow = TextOverflow.Clip
                 )
             }
-        }
-        // Expense amount row (fixed height)
-        Box(
-            modifier = Modifier.fillMaxWidth().height(16.dp),
-            contentAlignment = Alignment.Center
-        ) {
             if ((expense ?: 0L) > 0) {
                 Text(
                     text = formatShortAmount(expense!!),
                     style = MaterialTheme.typography.labelSmall.copy(fontSize = 8.sp),
                     color = Color(0xFF2196F3),
                     maxLines = 1,
-                    overflow = TextOverflow.Clip,
-                    textAlign = TextAlign.Center
+                    overflow = TextOverflow.Clip
                 )
             }
         }
