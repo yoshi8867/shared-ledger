@@ -1,24 +1,12 @@
 const express = require('express');
 const router = express.Router();
 const authMiddleware = require('../middleware/auth');
+const { updateCategory, deleteCategory } = require('../controllers/categoryController');
 
-// S5에서 구현 예정
+// PATCH /api/categories/:id
+router.patch('/:id', authMiddleware, updateCategory);
 
-router.get('/', authMiddleware, (req, res) => {
-  // GET /api/categories?ledger_id=1
-  res.status(501).json({ error: 'Not implemented (S5)' });
-});
-
-router.post('/', authMiddleware, (req, res) => {
-  res.status(501).json({ error: 'Not implemented (S5)' });
-});
-
-router.put('/:id', authMiddleware, (req, res) => {
-  res.status(501).json({ error: 'Not implemented (S5)' });
-});
-
-router.delete('/:id', authMiddleware, (req, res) => {
-  res.status(501).json({ error: 'Not implemented (S5)' });
-});
+// DELETE /api/categories/:id
+router.delete('/:id', authMiddleware, deleteCategory);
 
 module.exports = router;
