@@ -2,7 +2,7 @@
 
 **작성일:** 2026-04-05  
 **최종 업데이트:** 2026-04-06  
-**현재 Phase:** Phase 7 완료 → Phase 8 대기 중
+**현재 Phase:** Phase 8-A, 8-B 완료 → Phase 8-C 대기 중 (테스트/배포)
 
 ---
 
@@ -13,7 +13,7 @@
 ## 📊 전체 진행도
 
 ### Android 앱
-████████████████░░░░ 80% (Phase 1~7 완료, Phase 8 진행 중)
+████████████████░░░░ 85% (Phase 1~8-B 완료, Phase 8-C 진행 중)
 
 ### 백엔드 서버 (Node.js)
 ████████████████░░░░ 80% (S1~S3, S5~S7 완료, S4·S8 미시작)
@@ -391,22 +391,27 @@
 
 ---
 
-### Phase 8 — 설정 화면 확장 / 테스트 / 배포 ⏳
+### Phase 8 — 설정 화면 확장 / 테스트 / 배포 🔄
 
-#### 1️⃣ SettingsScreen 확장 🔄
+#### 1️⃣ SettingsScreen 확장 ✅
 - [x] ui/screens/settings/SettingsScreen.kt — 기본 뼈대 + 로그아웃 (Phase 7에서 구현 완료)
-- [ ] 동기화 주기 설정 (수동 / 15분 / 1시간)
-- [ ] 알림 설정 (Push 자동입력 ON/OFF)
-- [ ] 서버 상태 확인 (`GET /api/health`)
-- [ ] CategoryManageScreen 연결
+- [x] 동기화 주기 설정 (수동 / 15분 / 1시간) → SingleChoiceSegmentedButtonRow
+- [x] 알림 설정 (Push 자동입력 ON/OFF) → Switch
+- [x] 서버 상태 확인 (`GET /api/health`) → 온라인/오프라인 표시
+- [x] CategoryManageScreen 연결 → ListItem 클릭으로 이동
+- [x] AuthDataStore / AuthRepository — syncInterval, notificationsEnabled Flow 추가
+- [x] SettingsViewModel — checkServerHealth() + Dispatchers.IO 적용
+- [x] Routes.kt + AppNavigation.kt — CategoryManage 라우트 연결
+- [x] **테스트:** SettingsScreen 진입 → 모든 기능 작동 확인 ✅
 
 ---
 
-#### 2️⃣ CategoryManageScreen 구현 ⏳
-- [ ] ui/screens/category/CategoryManageScreen.kt
-- [ ] 구분 목록 (추가/수정/삭제)
-- [ ] 색상 선택기
-- [ ] **테스트:** 구분 CRUD 후 거래 화면 반영 확인
+#### 2️⃣ CategoryManageScreen 구현 ✅
+- [x] ui/screens/category/CategoryManageScreen.kt
+- [x] ui/screens/category/CategoryManageViewModel.kt
+- [x] 구분 목록 (추가/수정/삭제) → ListItem + FAB
+- [x] 색상 선택기 → FlowRow (12개 프리셋 색상)
+- [x] **테스트:** 구분 CRUD 후 거래 화면 반영 확인 ✅
 
 ---
 
@@ -532,10 +537,15 @@
 **2026-04-06** | Android Phase 6 완료 (SyncRepository + sync_status DB + HomeScreen sync 버튼 연결)
 **2026-04-06** | 백엔드 S7 완료 (공유 장부 API 전체 — shared/users/ledgers 라우터, dotenv 경로 수정)
 **2026-04-06** | Android Phase 7 완료 (SharedLedgerScreen + 장부 전환 BottomSheet + SettingsScreen 로그아웃)
+**2026-04-06** | Android Phase 8-A 완료 (SettingsScreen 확장 — 서버 상태확인·동기화 주기·알림 설정)
+**2026-04-06** | Android Phase 8-B 완료 (CategoryManageScreen 구현 — 구분 CRUD + 색상 선택기)
 
 ---
 
 ## 🎯 다음 단계
 
-**다음 단계:** Android Phase 8 (SettingsScreen 확장 — 동기화 주기·알림 설정, CategoryManageScreen, SyncWorker) 또는 백엔드 S8 (Render.com 배포)  
+**다음 단계:** 
+1. Android Phase 8-C (유닛 테스트, UI 테스트, 배포 준비)
+2. 또는 백엔드 S8 (Render.com 배포)
+
 **참고:** Phase 5 (Push 알림 / SMS 자동입력)는 별도 지시 시 진행

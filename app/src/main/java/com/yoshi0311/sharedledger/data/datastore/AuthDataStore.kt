@@ -3,6 +3,7 @@ package com.yoshi0311.sharedledger.data.datastore
 import android.content.Context
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
+import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.longPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
@@ -19,19 +20,23 @@ val Context.dataStore: DataStore<Preferences> by preferencesDataStore(name = "au
 @Singleton
 class AuthDataStore @Inject constructor(@ApplicationContext private val context: Context) {
 
-    private val ACCESS_TOKEN     = stringPreferencesKey("access_token")
-    private val REFRESH_TOKEN    = stringPreferencesKey("refresh_token")
-    private val LEDGER_ID        = longPreferencesKey("ledger_id")
-    private val ACTIVE_LEDGER_ID = longPreferencesKey("active_ledger_id")
-    private val LAST_SYNCED_AT   = stringPreferencesKey("last_synced_at")
-    private val SERVER_URL       = stringPreferencesKey("server_url")
+    private val ACCESS_TOKEN          = stringPreferencesKey("access_token")
+    private val REFRESH_TOKEN         = stringPreferencesKey("refresh_token")
+    private val LEDGER_ID             = longPreferencesKey("ledger_id")
+    private val ACTIVE_LEDGER_ID      = longPreferencesKey("active_ledger_id")
+    private val LAST_SYNCED_AT        = stringPreferencesKey("last_synced_at")
+    private val SERVER_URL            = stringPreferencesKey("server_url")
+    private val SYNC_INTERVAL         = stringPreferencesKey("sync_interval")
+    private val NOTIFICATIONS_ENABLED = booleanPreferencesKey("notifications_enabled")
 
-    val accessToken:     Flow<String?> = context.dataStore.data.map { it[ACCESS_TOKEN] }
-    val refreshToken:    Flow<String?> = context.dataStore.data.map { it[REFRESH_TOKEN] }
-    val ledgerId:        Flow<Long?>   = context.dataStore.data.map { it[LEDGER_ID] }
-    val activeLedgerId:  Flow<Long?>   = context.dataStore.data.map { it[ACTIVE_LEDGER_ID] }
-    val lastSyncedAt:    Flow<String?> = context.dataStore.data.map { it[LAST_SYNCED_AT] }
-    val serverUrl:       Flow<String>  = context.dataStore.data.map { it[SERVER_URL] ?: ServerUrlProvider.DEFAULT_URL }
+    val accessToken:         Flow<String?> = context.dataStore.data.map { it[ACCESS_TOKEN] }
+    val refreshToken:        Flow<String?> = context.dataStore.data.map { it[REFRESH_TOKEN] }
+    val ledgerId:            Flow<Long?>   = context.dataStore.data.map { it[LEDGER_ID] }
+    val activeLedgerId:      Flow<Long?>   = context.dataStore.data.map { it[ACTIVE_LEDGER_ID] }
+    val lastSyncedAt:        Flow<String?> = context.dataStore.data.map { it[LAST_SYNCED_AT] }
+    val serverUrl:           Flow<String>  = context.dataStore.data.map { it[SERVER_URL] ?: ServerUrlProvider.DEFAULT_URL }
+    val syncInterval:        Flow<String>  = context.dataStore.data.map { it[SYNC_INTERVAL] ?: "manual" }
+    val notificationsEnabled: Flow<Boolean> = context.dataStore.data.map { it[NOTIFICATIONS_ENABLED] ?: true }
 
     suspend fun saveTokens(accessToken: String, refreshToken: String, ledgerId: Long? = null) {
         context.dataStore.edit { prefs ->
@@ -63,5 +68,13 @@ class AuthDataStore @Inject constructor(@ApplicationContext private val context:
             prefs.remove(LEDGER_ID)
             prefs.remove(LAST_SYNCED_AT)
         }
+    }
+
+    suspend fun saveSyncInterval(interval: String) {
+        context.dataStore.edit { it[SYNC_INTERVAL] = interval }
+    }
+
+    suspend fun saveNotificationsEnabled(enabled: Boolean) {
+        context.dataStore.edit { it[NOTIFICATIONS_ENABLED] = enabled }
     }
 }

@@ -8,6 +8,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.yoshi0311.sharedledger.ui.screens.auth.SignupScreen
+import com.yoshi0311.sharedledger.ui.screens.category.CategoryManageScreen
 import com.yoshi0311.sharedledger.ui.screens.home.HomeScreen
 import com.yoshi0311.sharedledger.ui.screens.login.LoginScreen
 import com.yoshi0311.sharedledger.ui.screens.settings.SettingsScreen
@@ -92,7 +93,16 @@ fun AppNavigation(
                     navController.navigate(Routes.Login.route) {
                         popUpTo(0) { inclusive = true }
                     }
+                },
+                onNavigateToCategoryManage = {
+                    navController.navigate(Routes.CategoryManage.route)
                 }
+            )
+        }
+
+        composable(Routes.CategoryManage.route) {
+            CategoryManageScreen(
+                onNavigateBack = { navController.popBackStack() }
             )
         }
 

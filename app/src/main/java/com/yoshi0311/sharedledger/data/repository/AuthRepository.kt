@@ -22,10 +22,12 @@ class AuthRepository @Inject constructor(
     private val api: AuthApi,
     private val authDataStore: AuthDataStore
 ) {
-    val accessToken:    Flow<String?> = authDataStore.accessToken
-    val ledgerId:       Flow<Long?>   = authDataStore.ledgerId
-    val activeLedgerId: Flow<Long?>   = authDataStore.activeLedgerId
-    val serverUrl:      Flow<String>  = authDataStore.serverUrl
+    val accessToken:          Flow<String?> = authDataStore.accessToken
+    val ledgerId:             Flow<Long?>   = authDataStore.ledgerId
+    val activeLedgerId:       Flow<Long?>   = authDataStore.activeLedgerId
+    val serverUrl:            Flow<String>  = authDataStore.serverUrl
+    val syncInterval:         Flow<String>  = authDataStore.syncInterval
+    val notificationsEnabled: Flow<Boolean> = authDataStore.notificationsEnabled
 
     suspend fun setActiveLedgerId(id: Long) = authDataStore.setActiveLedgerId(id)
 
@@ -57,6 +59,12 @@ class AuthRepository @Inject constructor(
     suspend fun logout() {
         authDataStore.clearTokens()
     }
+
+    suspend fun setSyncInterval(interval: String) =
+        authDataStore.saveSyncInterval(interval)
+
+    suspend fun setNotificationsEnabled(enabled: Boolean) =
+        authDataStore.saveNotificationsEnabled(enabled)
 
     private fun Throwable.toDisplayMessage(): String = when (this) {
         is HttpException -> try {
