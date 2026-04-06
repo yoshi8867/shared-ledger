@@ -38,5 +38,8 @@ data class CategoryEntity(
     val syncedAt: Date? = null,
 
     @ColumnInfo(name = "server_id")
-    val serverId: String? = null
+    val serverId: Long? = null,
+
+    @ColumnInfo(name = "sync_status")
+    val syncStatus: String = "pending"
 )

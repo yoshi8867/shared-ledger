@@ -11,10 +11,10 @@ class CategoryRepository(private val dao: CategoryDao) {
         dao.getByLedgerId(ledgerId)
 
     suspend fun insert(category: CategoryEntity): Long =
-        dao.insert(category)
+        dao.insert(category.copy(syncStatus = "pending"))
 
     suspend fun update(category: CategoryEntity) =
-        dao.update(category)
+        dao.update(category.copy(syncStatus = "pending"))
 
     suspend fun softDelete(id: Long) =
         dao.softDelete(id, Date())

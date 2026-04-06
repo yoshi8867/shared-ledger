@@ -30,10 +30,10 @@ class TransactionRepository(private val dao: TransactionDao) {
         dao.getTotalExpenseByMonth(ledgerId, month)
 
     suspend fun insert(transaction: TransactionEntity): Long =
-        dao.insert(transaction)
+        dao.insert(transaction.copy(syncStatus = "pending"))
 
     suspend fun update(transaction: TransactionEntity) =
-        dao.update(transaction)
+        dao.update(transaction.copy(syncStatus = "pending"))
 
     suspend fun softDelete(id: Long) =
         dao.softDelete(id, Date())

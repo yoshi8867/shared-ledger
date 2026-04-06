@@ -29,8 +29,28 @@ interface CategoryDao {
     @Query("SELECT * FROM categories WHERE ledger_id = :ledgerId AND is_deleted = 0 AND synced_at IS NULL")
     fun getUnsyncedCategories(ledgerId: Long): Flow<List<CategoryEntity>>
 
-    @Query("UPDATE categories SET is_deleted = 1, deleted_at = :deletedAt WHERE id = :id")
+    // ── 동기화용 쿼리 ──────────────────────────────────────────────────────────
+
+    @Query("SELECT * FROM categories WHERE ledger_id = :ledgerId AND sync_status = 'pending'")
+    suspend fun getPendingCategories(ledgerId: Long): List<CategoryEntity>
+
+    @Query("SELECT * FROM categories WHERE server_id = :serverId LIMIT 1")
+    suspend fun getByServerId(serverId: Long): CategoryEntity?
+
+    @Query("SELECT * FROM categories WHERE id = :id LIMIT 1")
+    suspend fun getByIdSync(id: Long): CategoryEntity?
+
+    /** push 성공 후 server_id · synced_at · sync_status 갱신 */
+    @Query("UPDATE categories SET server_id = :serverId, sync_status = 'synced', synced_at = :syncedAt, updated_at = :syncedAt WHERE id = :id")
+    suspend fun markSynced(id: Long, serverId: Long, syncedAt: Date)
+
+    /** 로컬 삭제 → sync_status = 'pending' 포함 */
+    @Query("UPDATE categories SET is_deleted = 1, deleted_at = :deletedAt, sync_status = 'pending', updated_at = :deletedAt WHERE id = :id")
     suspend fun softDelete(id: Long, deletedAt: Date)
+
+    /** 서버 측 삭제 반영 → sync_status = 'synced' 유지 */
+    @Query("UPDATE categories SET is_deleted = 1, deleted_at = :deletedAt, sync_status = 'synced', updated_at = :deletedAt WHERE id = :id")
+    suspend fun softDeleteFromServer(id: Long, deletedAt: Date)
 
     @Query("DELETE FROM categories WHERE is_deleted = 1 AND deleted_at < :beforeDate")
     suspend fun purgeDeletedCategories(beforeDate: Date)

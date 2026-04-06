@@ -6,6 +6,7 @@ import com.yoshi0311.sharedledger.data.db.entity.CategoryEntity
 import com.yoshi0311.sharedledger.data.db.entity.TransactionEntity
 import com.yoshi0311.sharedledger.data.repository.AuthRepository
 import com.yoshi0311.sharedledger.data.repository.CategoryRepository
+import com.yoshi0311.sharedledger.data.repository.SyncRepository
 import com.yoshi0311.sharedledger.data.repository.TransactionRepository
 import com.yoshi0311.sharedledger.util.AppYearMonth
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -15,11 +16,20 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.launch
 import java.util.Calendar
 import javax.inject.Inject
+
+sealed class SyncState {
+    object Idle    : SyncState()
+    object Loading : SyncState()
+    object Success : SyncState()
+    data class Error(val message: String) : SyncState()
+}
 
 data class HomeUiState(
     val transactions: List<TransactionEntity> = emptyList(),
@@ -33,7 +43,8 @@ data class HomeUiState(
 class HomeViewModel @Inject constructor(
     private val transactionRepo: TransactionRepository,
     private val categoryRepo: CategoryRepository,
-    private val authRepo: AuthRepository
+    private val authRepo: AuthRepository,
+    private val syncRepo: SyncRepository
 ) : ViewModel() {
 
     // DataStore에서 서버 ledger_id 읽기 (없으면 1L 폴백)
@@ -81,6 +92,22 @@ class HomeViewModel @Inject constructor(
             started = SharingStarted.WhileSubscribed(5_000),
             initialValue = HomeUiState()
         )
+
+    private val _syncState = MutableStateFlow<SyncState>(SyncState.Idle)
+    val syncState: StateFlow<SyncState> = _syncState.asStateFlow()
+
+    fun sync() {
+        if (_syncState.value is SyncState.Loading) return
+        viewModelScope.launch {
+            _syncState.value = SyncState.Loading
+            val ledgerId = authRepo.ledgerId.firstOrNull() ?: 1L
+            val result = syncRepo.sync(ledgerId)
+            _syncState.value = if (result.isSuccess) SyncState.Success
+                               else SyncState.Error(result.exceptionOrNull()?.message ?: "동기화 실패")
+        }
+    }
+
+    fun resetSyncState() { _syncState.value = SyncState.Idle }
 
     fun nextMonth() {
         _selectedMonth.value = _selectedMonth.value.next()

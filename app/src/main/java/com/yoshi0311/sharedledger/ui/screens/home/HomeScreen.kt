@@ -14,18 +14,22 @@ import androidx.compose.material.icons.filled.PieChart
 import androidx.compose.material.icons.filled.Sync
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Tab
 import androidx.compose.material3.TabRow
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
@@ -50,6 +54,23 @@ fun HomeScreen(
     val selectedMonth by viewModel.selectedMonth.collectAsStateWithLifecycle()
     val selectedTab by viewModel.selectedTab.collectAsStateWithLifecycle()
     val selectedCalendarDay by viewModel.selectedCalendarDay.collectAsStateWithLifecycle()
+    val syncState by viewModel.syncState.collectAsStateWithLifecycle()
+
+    val snackbarHostState = remember { SnackbarHostState() }
+
+    LaunchedEffect(syncState) {
+        when (val s = syncState) {
+            is SyncState.Success -> {
+                snackbarHostState.showSnackbar("동기화 완료")
+                viewModel.resetSyncState()
+            }
+            is SyncState.Error -> {
+                snackbarHostState.showSnackbar("동기화 실패: ${s.message}")
+                viewModel.resetSyncState()
+            }
+            else -> Unit
+        }
+    }
 
     val tabs = listOf("목록", "캘린더", "통계")
     val tabIcons = listOf(
@@ -69,6 +90,7 @@ fun HomeScreen(
         ?: if (isCurrentMonth) todayDay else null
 
     Scaffold(
+        snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = {
             TopAppBar(
                 title = {
@@ -78,8 +100,18 @@ fun HomeScreen(
                     )
                 },
                 actions = {
-                    IconButton(onClick = { /* TODO: 동기화 (Phase 6) */ }) {
-                        Icon(imageVector = Icons.Filled.Sync, contentDescription = "동기화")
+                    IconButton(
+                        onClick = { viewModel.sync() },
+                        enabled = syncState !is SyncState.Loading
+                    ) {
+                        if (syncState is SyncState.Loading) {
+                            CircularProgressIndicator(
+                                modifier = Modifier.padding(8.dp),
+                                strokeWidth = 2.dp
+                            )
+                        } else {
+                            Icon(imageVector = Icons.Filled.Sync, contentDescription = "동기화")
+                        }
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
