@@ -64,6 +64,9 @@ dependencies {
     // Navigation
     implementation(libs.androidx.navigation.compose)
 
+    // DataStore
+    implementation(libs.androidx.datastore.preferences)
+
     // Room Database
     implementation(libs.androidx.room.runtime)
     implementation(libs.androidx.room.ktx)

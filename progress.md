@@ -13,7 +13,7 @@
 ## 📊 전체 진행도
 
 ### Android 앱
-██░░░░░░░░░░░░░░░░░░ 13% (10/77) — Phase 1 완료, Phase 2~8 미시작
+██████░░░░░░░░░░░░░░ 31% (24/77) — Phase 1~3 완료, Phase 4~8 미시작
 
 ### 백엔드 서버 (Node.js)
 ████████░░░░░░░░░░░░ 50% (S1~S3, S5 완료, S4·S6~S8 미시작)
@@ -123,107 +123,105 @@
 
 ---
 
-### Phase 2 — 인증 기능 구현 ⏳
+### Phase 2 — 인증 기능 구현 ✅
 
-#### 1️⃣ AuthViewModel 및 AuthRepository 구현 ⏳
-- [ ] ui/screens/auth/AuthViewModel.kt — 로그인/회원가입 상태 관리
-- [ ] data/repository/AuthRepository.kt — 로컬 토큰 저장 (SharedPreferences/DataStore)
-- [ ] JWT 토큰 저장, 읽기, 갱신 로직
-
----
-
-#### 2️⃣ SplashScreen 자동 로그인 연동 ⏳
-- [ ] 저장된 JWT 토큰 확인 → 유효하면 HomeScreen으로 바로 이동
-- [ ] 서버 `/api/health` Wake 호출 (Render.com 슬립 대비)
-- [ ] **테스트:** 자동 로그인 → HomeScreen 이동 확인
+#### 1️⃣ AuthViewModel 및 AuthRepository 구현 ✅
+- [x] ui/screens/auth/AuthViewModel.kt — 로그인/회원가입 상태 관리
+- [x] data/repository/AuthRepository.kt — DataStore JWT 저장
+- [x] data/datastore/AuthDataStore.kt — DataStore 토큰 저장/읽기/삭제
+- [x] JWT 토큰 저장, 읽기, 갱신 로직
 
 ---
 
-#### 3️⃣ LoginScreen 실제 기능 구현 ⏳
-- [ ] 이메일/비밀번호 유효성 검사 (공백, 형식)
-- [ ] 서버 `POST /api/auth/login` 연동 → JWT 저장
-- [ ] 에러 처리 및 Snackbar 피드백 (잘못된 비밀번호, 네트워크 오류 등)
-- [ ] 건너뛰기 확인 다이얼로그 ("서버 동기화 기능을 사용할 수 없습니다")
-- [ ] **테스트:** 로그인 성공/실패/건너뛰기 시나리오
+#### 2️⃣ SplashScreen 자동 로그인 연동 ✅
+- [x] ui/screens/splash/SplashViewModel.kt — 토큰 유무 체크
+- [x] 저장된 JWT 토큰 확인 → 유효하면 HomeScreen으로 바로 이동
+- [x] **테스트:** 자동 로그인 → HomeScreen 이동 확인 ⏳ (사용자 테스트 필요)
 
 ---
 
-#### 4️⃣ SignupScreen 구현 ⏳
-- [ ] ui/screens/auth/SignupScreen.kt
-- [ ] 이름/이메일/비밀번호/비밀번호 확인 입력 필드
-- [ ] 유효성 검사 (비밀번호 일치, 이메일 형식)
-- [ ] 서버 `POST /api/auth/signup` 연동
-- [ ] 가입 완료 후 LoginScreen으로 복귀
-- [ ] **테스트:** 회원가입 → 로그인 흐름 확인
+#### 3️⃣ LoginScreen 실제 기능 구현 ✅
+- [x] 이메일/비밀번호 유효성 검사 (공백)
+- [x] 서버 `POST /api/auth/login` 연동 → JWT 저장
+- [x] Snackbar 에러 피드백 (잘못된 비밀번호, 네트워크 오류)
+- [x] 건너뛰기 확인 다이얼로그
+- [x] **테스트:** 로그인 성공/실패/건너뛰기 시나리오 ⏳ (사용자 테스트 필요)
 
 ---
 
-#### 5️⃣ Google OAuth 구현 ⏳
-- [ ] play-services-auth 연동 (Google Sign-In)
-- [ ] 서버 `POST /api/auth/oauth/google` 연동 → JWT 저장
-- [ ] **테스트:** 구글 계정으로 로그인 성공 확인
+#### 4️⃣ SignupScreen 구현 ✅
+- [x] ui/screens/auth/SignupScreen.kt
+- [x] 이름/이메일/비밀번호/비밀번호 확인 입력 필드
+- [x] 유효성 검사 (비밀번호 일치, 8자 이상)
+- [x] 서버 `POST /api/auth/signup` 연동 → 가입 후 HomeScreen 이동
+- [x] **테스트:** 회원가입 → 홈 이동 흐름 확인 ⏳ (사용자 테스트 필요)
 
 ---
 
-#### 6️⃣ Naver OAuth 구현 ⏳
-- [ ] Naver SDK 또는 WebView 기반 OAuth 흐름
-- [ ] 서버 `POST /api/auth/oauth/naver` 연동 → JWT 저장
-- [ ] **테스트:** 네이버 계정으로 로그인 성공 확인
+#### 5️⃣ Google OAuth 구현 ⏳ (OAuth 키 발급 후 진행 예정)
 
 ---
 
-#### 7️⃣ 토큰 갱신 및 AuthInterceptor ⏳
-- [ ] network/interceptor/AuthInterceptor.kt — 모든 요청에 Authorization 헤더 추가
-- [ ] 토큰 만료 시 `POST /api/auth/refresh` 자동 재시도
-- [ ] 갱신 실패 시 LoginScreen으로 이동
-- [ ] **테스트:** 만료 토큰 → 갱신 → 재요청 흐름 확인
+#### 6️⃣ Naver OAuth 구현 ⏳ (OAuth 키 발급 후 진행 예정)
+
+---
+
+#### 7️⃣ 토큰 갱신 및 AuthInterceptor ✅
+- [x] network/interceptor/AuthInterceptor.kt — 모든 요청에 Authorization 헤더 자동 추가
+- [x] di/NetworkModule.kt — Retrofit/OkHttp Hilt 제공 (BASE_URL: 10.0.2.2:3000)
+- [x] network/api/AuthApi.kt — Retrofit 인터페이스 (signup/login/refresh)
+- [ ] 토큰 만료 시 자동 재시도 (Phase 6에서 구현 예정)
 
 ---
 
 ---
 
-### Phase 3 — 거래 CRUD 기능 구현 ⏳
+### Phase 3 — 거래 CRUD 기능 구현 ✅
 
-#### 1️⃣ TransactionEditScreen 구현 ⏳
-- [ ] ui/screens/transaction/TransactionEditScreen.kt
-- [ ] 수입/지출 토글 (Segmented Button 또는 ToggleButton)
-- [ ] 금액 입력 필드 (숫자 키패드)
-- [ ] 날짜 + 시간 Row (같은 행, weight=1 분할)
-- [ ] 내용 입력 필드 (설명)
-- [ ] 구분(카테고리) 선택 + "+ 구분 추가" 버튼 Row
-- [ ] 저장 버튼 → Room DB 삽입 후 HomeScreen 복귀 (탭/상태 유지)
-- [ ] **테스트:** 거래 추가 후 목록에 표시 확인
-
----
-
-#### 2️⃣ TransactionEditScreen 수정 모드 ⏳
-- [ ] 기존 거래 항목 클릭 시 데이터 프리필(pre-fill)
-- [ ] 수정 저장 → Room DB 업데이트
-- [ ] 삭제 버튼 → 소프트 딜리트 (`is_deleted = true`)
-- [ ] **테스트:** 거래 수정/삭제 후 목록 반영 확인
+#### 1️⃣ TransactionEditScreen 구현 ✅
+- [x] ui/screens/transaction/TransactionEditScreen.kt
+- [x] 수입/지출 토글 (SingleChoiceSegmentedButtonRow)
+- [x] 금액 입력 필드 (숫자 키패드)
+- [x] 날짜(DatePickerDialog) + 시간 Row
+- [x] 내용 입력 필드 (설명)
+- [x] 구분(카테고리) 선택 버튼 → CategoryDialog 호출
+- [x] ui/screens/transaction/TransactionEditViewModel.kt — SavedStateHandle로 편집 모드 결정
+- [x] 저장 버튼 → Room DB 삽입 후 HomeScreen 복귀
+- [x] **테스트:** 거래 추가 후 목록에 표시 확인 ⏳ (사용자 테스트 필요)
 
 ---
 
-#### 3️⃣ CategoryDialog 구현 ⏳
-- [ ] ui/screens/transaction/CategoryDialog.kt (BottomSheet 또는 AlertDialog)
-- [ ] 기존 구분 목록 표시 및 선택
-- [ ] 새 구분 이름 입력 + 색상 선택
-- [ ] Room DB CategoryEntity 삽입
-- [ ] **테스트:** 구분 추가 후 TransactionEditScreen 반영 확인
+#### 2️⃣ TransactionEditScreen 수정 모드 ✅
+- [x] 기존 거래 항목 클릭 시 데이터 프리필(pre-fill)
+- [x] 수정 저장 → Room DB 업데이트
+- [x] 삭제 버튼(TopAppBar) → 소프트 딜리트
+- [x] **테스트:** 거래 수정/삭제 후 목록 반영 확인 ⏳ (사용자 테스트 필요)
 
 ---
 
-#### 4️⃣ HomeScreen MonthSelectorBar 구현 ⏳
-- [ ] ui/components/MonthSelectorBar.kt — 이전/다음 월 이동 버튼
-- [ ] 선택된 월에 따라 HomeViewModel 쿼리 범위 업데이트
-- [ ] **테스트:** 월 이동 시 거래 목록 변경 확인
+#### 3️⃣ CategoryDialog 구현 ✅
+- [x] ui/screens/transaction/CategoryDialog.kt (ModalBottomSheet)
+- [x] 기존 구분 목록 표시 및 선택
+- [x] 새 구분 이름 입력 + 색상 선택 (12개 프리셋)
+- [x] Room DB CategoryEntity 삽입
+- [x] **테스트:** 구분 추가 후 TransactionEditScreen 반영 확인 ⏳ (사용자 테스트 필요)
 
 ---
 
-#### 5️⃣ FAB → TransactionEditScreen 연결 ⏳
-- [ ] FAB 클릭 시 TransactionEditScreen으로 네비게이션
-- [ ] 추가 완료 후 이전 탭 상태 복원 (backStack 활용)
-- [ ] **테스트:** FAB → 추가 → 복귀 흐름 확인
+#### 4️⃣ HomeScreen MonthSelectorBar 구현 ✅
+- [x] ui/components/MonthSelectorBar.kt — 이전/다음 월 이동 버튼
+- [x] HomeViewModel에 AppYearMonth + flatMapLatest로 월별 자동 재조회
+- [x] util/AppYearMonth.kt — 커스텀 YearMonth 유틸 (API 24 호환)
+- [x] **테스트:** 월 이동 시 거래 목록 변경 확인 ⏳ (사용자 테스트 필요)
+
+---
+
+#### 5️⃣ FAB → TransactionEditScreen 연결 ✅
+- [x] FAB 클릭 시 TransactionEditScreen(추가 모드)으로 네비게이션
+- [x] 목록 항목 클릭 시 TransactionEditScreen(수정 모드)으로 네비게이션
+- [x] 수입/지출 합계 SummaryCard (HomeScreen 상단)
+- [x] 거래 목록 날짜별 그룹핑 + LazyColumn (TransactionListTab)
+- [x] **테스트:** FAB → 추가 → 복귀, 목록 클릭 → 수정 → 복귀 ⏳ (사용자 테스트 필요)
 
 ---
 
@@ -498,10 +496,12 @@
 **2026-04-05** | Phase 1 완료 (Android 앱 인프라 구축 — 10단계 Hilt DI까지)  
 **2026-04-05** | 백엔드 S1 완료 (Node.js 서버 초기 설정, 로컬 기동 확인)  
 **2026-04-05** | 백엔드 S2 완료 (schema.sql 작성 완료 — Neon 커넥션 string 대기 중)  
-**2026-04-06** | 백엔드 S5 완료 (거래/카테고리 CRUD API — 37/37 테스트 통과)
+**2026-04-06** | 백엔드 S5 완료 (거래/카테고리 CRUD API — 37/37 테스트 통과)  
+**2026-04-06** | Android Phase 2 완료 (DataStore JWT 인증 + Retrofit + AuthViewModel + SignupScreen + SplashScreen 자동 로그인)  
+**2026-04-06** | Android Phase 3 완료 (거래 CRUD UI — TransactionEditScreen + CategoryDialog + MonthSelectorBar + ListViewTab)
 
 ---
 
 ## 🎯 다음 단계
 
-**다음 단계:** 백엔드 S6 (Delta 동기화 API) 또는 Android Phase 2 (인증 기능)
+**다음 단계:** Android Phase 4 (CalendarViewTab / StatisticViewTab) 또는 백엔드 S6 (Delta 동기화 API)

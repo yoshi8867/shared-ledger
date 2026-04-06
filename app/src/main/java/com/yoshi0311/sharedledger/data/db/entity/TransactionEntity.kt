@@ -13,7 +13,7 @@ import java.util.Date
             entity = CategoryEntity::class,
             parentColumns = ["id"],
             childColumns = ["category_id"],
-            onDelete = ForeignKey.CASCADE
+            onDelete = ForeignKey.SET_NULL
         )
     ]
 )
@@ -24,8 +24,8 @@ data class TransactionEntity(
     @ColumnInfo(name = "ledger_id")
     val ledgerId: Long,
 
-    @ColumnInfo(name = "category_id")
-    val categoryId: Long,
+    @ColumnInfo(name = "category_id", index = true)
+    val categoryId: Long? = null, // 선택사항 — null이면 구분 없음
 
     @ColumnInfo(name = "type")
     val type: String, // "income" or "expense"

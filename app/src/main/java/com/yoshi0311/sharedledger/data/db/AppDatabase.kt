@@ -16,7 +16,7 @@ import com.yoshi0311.sharedledger.data.db.entity.CategoryEntity
         TransactionEntity::class,
         CategoryEntity::class
     ],
-    version = 1,
+    version = 2,
     exportSchema = false
 )
 @TypeConverters(DateConverter::class)
