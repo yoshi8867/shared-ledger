@@ -2,12 +2,17 @@ package com.yoshi0311.sharedledger.ui.screens.settings
 
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.Logout
+import androidx.compose.material.icons.filled.Check
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
@@ -15,7 +20,10 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
@@ -26,6 +34,8 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.yoshi0311.sharedledger.ui.screens.auth.AuthViewModel
@@ -35,19 +45,25 @@ import com.yoshi0311.sharedledger.ui.screens.auth.AuthViewModel
 fun SettingsScreen(
     onNavigateBack: () -> Unit,
     onLogout: () -> Unit,
-    viewModel: AuthViewModel = hiltViewModel()
+    authViewModel: AuthViewModel = hiltViewModel(),
+    settingsViewModel: SettingsViewModel = hiltViewModel()
 ) {
-    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
-    var showLogoutDialog by remember { mutableStateOf(false) }
+    val authUiState by authViewModel.uiState.collectAsStateWithLifecycle()
+    val serverUrl by settingsViewModel.serverUrl.collectAsStateWithLifecycle()
 
-    LaunchedEffect(uiState.isSuccess) {
-        if (uiState.isSuccess) {
-            viewModel.resetSuccess()
+    var urlInput by remember(serverUrl) { mutableStateOf(serverUrl) }
+    var showLogoutDialog by remember { mutableStateOf(false) }
+    val snackbarHostState = remember { SnackbarHostState() }
+
+    LaunchedEffect(authUiState.isSuccess) {
+        if (authUiState.isSuccess) {
+            authViewModel.resetSuccess()
             onLogout()
         }
     }
 
     Scaffold(
+        snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = {
             TopAppBar(
                 title = { Text("설정") },
@@ -64,10 +80,50 @@ fun SettingsScreen(
                 .fillMaxSize()
                 .padding(padding)
         ) {
-            // 추후 Phase 8에서 항목 추가 예정:
-            // 동기화 주기 설정, 알림 설정, 카테고리 관리 등
+            // 서버 설정 섹션
+            Text(
+                text = "서버 설정",
+                style = MaterialTheme.typography.labelMedium,
+                color = MaterialTheme.colorScheme.primary,
+                modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
+            )
+            OutlinedTextField(
+                value = urlInput,
+                onValueChange = { urlInput = it },
+                label = { Text("서버 주소") },
+                placeholder = { Text("예: http://192.168.0.1:3000") },
+                singleLine = true,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp),
+                keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
+                keyboardActions = KeyboardActions(onDone = {
+                    if (urlInput.isNotBlank()) {
+                        settingsViewModel.saveServerUrl(urlInput)
+                    }
+                }),
+                trailingIcon = {
+                    IconButton(
+                        onClick = {
+                            if (urlInput.isNotBlank()) {
+                                settingsViewModel.saveServerUrl(urlInput)
+                            }
+                        },
+                        enabled = urlInput.isNotBlank() && urlInput != serverUrl
+                    ) {
+                        Icon(Icons.Filled.Check, contentDescription = "저장")
+                    }
+                }
+            )
+            Spacer(modifier = Modifier.height(4.dp))
+            Text(
+                text = "저장 즉시 다음 요청부터 새 주소로 연결됩니다",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.padding(horizontal = 16.dp)
+            )
 
-            HorizontalDivider()
+            HorizontalDivider(modifier = Modifier.padding(vertical = 16.dp))
 
             ListItem(
                 headlineContent = {
@@ -95,7 +151,7 @@ fun SettingsScreen(
             confirmButton = {
                 TextButton(onClick = {
                     showLogoutDialog = false
-                    viewModel.logout()
+                    authViewModel.logout()
                 }) { Text("로그아웃", color = MaterialTheme.colorScheme.error) }
             },
             dismissButton = {

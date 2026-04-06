@@ -25,8 +25,11 @@ class AuthRepository @Inject constructor(
     val accessToken:    Flow<String?> = authDataStore.accessToken
     val ledgerId:       Flow<Long?>   = authDataStore.ledgerId
     val activeLedgerId: Flow<Long?>   = authDataStore.activeLedgerId
+    val serverUrl:      Flow<String>  = authDataStore.serverUrl
 
     suspend fun setActiveLedgerId(id: Long) = authDataStore.setActiveLedgerId(id)
+
+    suspend fun setServerUrl(url: String) = authDataStore.saveServerUrl(url)
 
     suspend fun isLoggedIn(): Boolean =
         authDataStore.accessToken.firstOrNull() != null

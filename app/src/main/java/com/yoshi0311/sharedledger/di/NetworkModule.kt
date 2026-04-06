@@ -1,9 +1,11 @@
 package com.yoshi0311.sharedledger.di
 
+import com.yoshi0311.sharedledger.network.ServerUrlProvider
 import com.yoshi0311.sharedledger.network.api.AuthApi
 import com.yoshi0311.sharedledger.network.api.SharedApi
 import com.yoshi0311.sharedledger.network.api.SyncApi
 import com.yoshi0311.sharedledger.network.interceptor.AuthInterceptor
+import com.yoshi0311.sharedledger.network.interceptor.DynamicUrlInterceptor
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -18,16 +20,17 @@ import javax.inject.Singleton
 @InstallIn(SingletonComponent::class)
 object NetworkModule {
 
-    // 실기기 테스트용 PC 로컬 IP (배포 시 Render URL로 교체)
-    private const val BASE_URL = "http://172.30.5.241:3000/"
-
     @Provides
     @Singleton
-    fun provideOkHttpClient(authInterceptor: AuthInterceptor): OkHttpClient {
+    fun provideOkHttpClient(
+        dynamicUrlInterceptor: DynamicUrlInterceptor,
+        authInterceptor: AuthInterceptor
+    ): OkHttpClient {
         val logging = HttpLoggingInterceptor().apply {
             level = HttpLoggingInterceptor.Level.BODY
         }
         return OkHttpClient.Builder()
+            .addInterceptor(dynamicUrlInterceptor) // URL 교체 (인증 헤더보다 먼저)
             .addInterceptor(authInterceptor)
             .addInterceptor(logging)
             .build()
@@ -37,7 +40,7 @@ object NetworkModule {
     @Singleton
     fun provideRetrofit(client: OkHttpClient): Retrofit =
         Retrofit.Builder()
-            .baseUrl(BASE_URL)
+            .baseUrl(ServerUrlProvider.DEFAULT_URL)
             .client(client)
             .addConverterFactory(GsonConverterFactory.create())
             .build()

@@ -7,6 +7,7 @@ import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.longPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
+import com.yoshi0311.sharedledger.network.ServerUrlProvider
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
@@ -23,12 +24,14 @@ class AuthDataStore @Inject constructor(@ApplicationContext private val context:
     private val LEDGER_ID        = longPreferencesKey("ledger_id")
     private val ACTIVE_LEDGER_ID = longPreferencesKey("active_ledger_id")
     private val LAST_SYNCED_AT   = stringPreferencesKey("last_synced_at")
+    private val SERVER_URL       = stringPreferencesKey("server_url")
 
     val accessToken:     Flow<String?> = context.dataStore.data.map { it[ACCESS_TOKEN] }
     val refreshToken:    Flow<String?> = context.dataStore.data.map { it[REFRESH_TOKEN] }
     val ledgerId:        Flow<Long?>   = context.dataStore.data.map { it[LEDGER_ID] }
     val activeLedgerId:  Flow<Long?>   = context.dataStore.data.map { it[ACTIVE_LEDGER_ID] }
     val lastSyncedAt:    Flow<String?> = context.dataStore.data.map { it[LAST_SYNCED_AT] }
+    val serverUrl:       Flow<String>  = context.dataStore.data.map { it[SERVER_URL] ?: ServerUrlProvider.DEFAULT_URL }
 
     suspend fun saveTokens(accessToken: String, refreshToken: String, ledgerId: Long? = null) {
         context.dataStore.edit { prefs ->
@@ -47,6 +50,10 @@ class AuthDataStore @Inject constructor(@ApplicationContext private val context:
 
     suspend fun saveLastSyncedAt(isoTimestamp: String) {
         context.dataStore.edit { it[LAST_SYNCED_AT] = isoTimestamp }
+    }
+
+    suspend fun saveServerUrl(url: String) {
+        context.dataStore.edit { it[SERVER_URL] = url }
     }
 
     suspend fun clearTokens() {

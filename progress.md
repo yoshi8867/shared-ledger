@@ -1,8 +1,8 @@
 # Shared Ledger App - 개발 진행도
 
 **작성일:** 2026-04-05  
-**최종 업데이트:** 2026-04-05  
-**현재 Phase:** 1 완료 → Phase 2 대기 중
+**최종 업데이트:** 2026-04-06  
+**현재 Phase:** Phase 7 완료 → Phase 8 대기 중
 
 ---
 
@@ -13,10 +13,10 @@
 ## 📊 전체 진행도
 
 ### Android 앱
-████████░░░░░░░░░░░░ 40% (31/77) — Phase 1~3 완료, Phase 4 완료
+████████████████░░░░ 80% (Phase 1~7 완료, Phase 8 진행 중)
 
 ### 백엔드 서버 (Node.js)
-████████░░░░░░░░░░░░ 50% (S1~S3, S5 완료, S4·S6~S8 미시작)
+████████████████░░░░ 80% (S1~S3, S5~S7 완료, S4·S8 미시작)
 
 ---
 
@@ -304,7 +304,7 @@
 
 ---
 
-### Phase 6 — 양방향 동기화 🔄
+### Phase 6 — 양방향 동기화 ✅
 
 #### 1️⃣ 서버 S6 + Retrofit 네트워크 레이어 ✅
 - [x] server/controllers/syncController.js — delta / push 구현
@@ -315,75 +315,90 @@
 - [x] AuthDataStore — ledger_id / last_synced_at 저장
 - [x] AuthRepository — ledgerId Flow 노출
 - [x] HomeViewModel / TransactionEditViewModel — 하드코딩 ledgerId 제거, DataStore 값 사용
-- [ ] **테스트:** 로그인 후 ledger_id 정상 저장 확인 ⏳
+- [x] **테스트:** 로그인 후 ledger_id 정상 저장 + 동기화 확인 ✅
 
 ---
 
-#### 2️⃣ SyncWorker 구현 (WorkManager) ⏳
+#### 2️⃣ SyncRepository + DB sync_status 컬럼 ✅
+- [x] TransactionEntity / CategoryEntity — `syncStatus`, `serverId: Long?` 추가
+- [x] TransactionDao / CategoryDao — getPending, getByServerId, markSynced, softDelete 쿼리 추가
+- [x] data/repository/SyncRepository.kt — pushPending() + pullDelta() 구현
+- [x] insert/update 시 syncStatus = "pending" 자동 세팅
+- [x] 충돌 해결: 타임스탬프 기반 최신 우선 (last-write-wins)
+- [x] AppDatabase version 2 → 3 (fallbackToDestructiveMigration)
+- [x] **테스트:** pending → push → pull → synced 흐름 확인 ✅
+
+---
+
+#### 3️⃣ 동기화 UI 연결 ✅
+- [x] HomeViewModel — SyncState sealed class, sync(), resetSyncState()
+- [x] HomeScreen TopAppBar 동기화 아이콘 → viewModel.sync() 연결
+- [x] 동기화 중 CircularProgressIndicator 표시
+- [x] 완료/실패 시 Snackbar 피드백
+- [x] **테스트:** 수동 동기화 버튼 → 서버 반영 확인 ✅
+
+---
+
+#### 4️⃣ SyncWorker 구현 (WorkManager) ⏳ (Phase 8에서 구현 예정)
 - [ ] service/sync/SyncWorker.kt — 백그라운드 동기화 작업
 - [ ] service/sync/SyncManager.kt — 동기화 스케줄 관리
 - [ ] 설정에서 주기 설정 (수동 / 15분 / 1시간 등)
 
 ---
 
-#### 3️⃣ Delta 동기화 구현 ⏳
-- [ ] 서버 `GET /api/sync/delta?since={timestamp}` 연동
-- [ ] 변경분 다운로드 → Room DB 업데이트
-- [ ] `sync_status`: synced / pending / conflict 관리
+---
+
+### Phase 7 — 공유 장부 ✅
+
+#### 1️⃣ 서버 S7 공유 장부 API ✅
+- [x] server/controllers/sharedController.js — getSharedUsers, invite, updatePermission, revokeAccess, getSharedLedgers
+- [x] server/routes/shared.js — GET /, POST /, PATCH /:id, DELETE /:id 연결
+- [x] server/routes/ledgers.js — GET /shared 구현 (501 스텁 → 실제 로직)
+- [x] server/routes/users.js + app.js — GET /api/users/search?email= 신규 라우트
+- [x] server/server.js — dotenv path 절대경로 수정 (__dirname 기반)
+- [x] **테스트:** 초대 → 검색 → 권한 변경 → 해제 흐름 확인 ✅
 
 ---
 
-#### 4️⃣ 로컬 변경사항 업로드 ⏳
-- [ ] 서버 `POST /api/sync/push` 연동
-- [ ] pending 상태 항목 일괄 전송
-- [ ] 충돌 해결 (타임스탬프 기반 최신 우선)
-- [ ] **테스트:** 오프라인 추가 → 온라인 복귀 → 동기화 정합성 확인
+#### 2️⃣ SharedLedgerScreen 구현 ✅
+- [x] network/api/SharedApi.kt — DTO + Retrofit 인터페이스 (SharedUserDto, OwnLedgerDto 등)
+- [x] data/repository/SharedRepository.kt — 모든 메서드 Result<T> 반환
+- [x] ui/screens/shared/SharedLedgerViewModel.kt — loadSharedUsers, searchUser, invite, updatePermission, revokeAccess
+- [x] ui/screens/shared/SharedLedgerScreen.kt — 이메일 검색 + 초대 다이얼로그 + 공유 사용자 목록 (권한 변경/해제)
+- [x] navigation/Routes.kt — SharedLedger("shared_ledger/{ledgerId}") 추가
+- [x] navigation/AppNavigation.kt — SharedLedger composable 연결
+- [x] **테스트:** 이메일 검색 → 초대 → 목록 표시 확인 ✅
 
 ---
 
-#### 5️⃣ 동기화 상태 UI 반영 ⏳
-- [ ] HomeScreen TopAppBar 동기화 아이콘 실제 연결
-- [ ] 동기화 중 로딩 표시, 완료 시 피드백 (Snackbar)
-- [ ] **테스트:** 수동 동기화 버튼 → 완료 피드백 확인
+#### 3️⃣ 장부 전환 기능 ✅
+- [x] AuthDataStore — ACTIVE_LEDGER_ID 키 추가, setActiveLedgerId()
+- [x] AuthRepository — activeLedgerId Flow 노출, setActiveLedgerId()
+- [x] HomeViewModel — currentLedgerId를 activeLedgerId로 변경, loadLedgers(), switchLedger(), LedgerItem 데이터 클래스
+- [x] HomeScreen — TopAppBar 타이틀 클릭 → ModalBottomSheet 장부 선택 목록
+- [x] **테스트:** 공유 장부 전환 후 거래 목록 변경 확인 ✅
 
 ---
 
----
-
-### Phase 7 — 공유 장부 ⏳
-
-#### 1️⃣ SharedLedgerScreen 구현 ⏳
-- [ ] ui/screens/shared/SharedLedgerScreen.kt
-- [ ] 현재 공유 사용자 목록 (권한 표시)
-- [ ] 이메일로 사용자 검색 (`GET /api/users/search?email=`)
-- [ ] 초대 → 서버 `POST /api/shared-ledgers`
-
----
-
-#### 2️⃣ 공유 권한 관리 ⏳
-- [ ] 권한 변경 (view/edit) → `PATCH /api/shared-ledgers/{id}`
-- [ ] 공유 해제 → `DELETE /api/shared-ledgers/{id}`
-- [ ] **테스트:** 초대 → 권한 변경 → 해제 흐름 확인
-
----
-
-#### 3️⃣ 공유된 장부 수신 ⏳
-- [ ] 나와 공유된 장부 목록 (`GET /api/ledgers/shared`)
-- [ ] 장부 전환 기능 (HomeViewModel에 현재 장부 ID 동적 변경)
-- [ ] **테스트:** 공유 장부 전환 후 거래 목록 변경 확인
+#### 4️⃣ SettingsScreen + 로그아웃 ✅
+- [x] ui/screens/settings/SettingsScreen.kt — 로그아웃 ListItem + AlertDialog
+- [x] AuthViewModel — logout() 함수 추가
+- [x] navigation/Routes.kt — Settings("settings") 추가
+- [x] navigation/AppNavigation.kt — Settings composable + 로그아웃 시 전체 백스택 제거
+- [x] **테스트:** 로그아웃 → LoginScreen 이동, 재로그인 후 ledger_id 정상 저장 확인 ✅
 
 ---
 
 ---
 
-### Phase 8 — 설정 화면 / 테스트 / 배포 ⏳
+### Phase 8 — 설정 화면 확장 / 테스트 / 배포 ⏳
 
-#### 1️⃣ SettingsScreen 구현 ⏳
-- [ ] ui/screens/settings/SettingsScreen.kt
-- [ ] 동기화 주기 설정
+#### 1️⃣ SettingsScreen 확장 🔄
+- [x] ui/screens/settings/SettingsScreen.kt — 기본 뼈대 + 로그아웃 (Phase 7에서 구현 완료)
+- [ ] 동기화 주기 설정 (수동 / 15분 / 1시간)
 - [ ] 알림 설정 (Push 자동입력 ON/OFF)
 - [ ] 서버 상태 확인 (`GET /api/health`)
-- [ ] 로그아웃 (토큰 삭제 → LoginScreen 이동)
+- [ ] CategoryManageScreen 연결
 
 ---
 
@@ -472,22 +487,23 @@
 
 ---
 
-### S6️⃣ 동기화 API ⏳
-- [ ] `GET /api/sync/delta?since={timestamp}` - Delta sync
-- [ ] `POST /api/sync/push` - 클라이언트 변경사항 일괄 업로드
-- [ ] 충돌 해결 로직 (타임스탬프 기반 최신 우선)
-- [ ] 동기화 상태 필드 관리 (`sync_status`: synced / pending / conflict)
-- **테스트:** 오프라인 변경 후 동기화 시 데이터 정합성 확인
+### S6️⃣ 동기화 API ✅
+- [x] `GET /api/sync/delta?since={timestamp}` - Delta sync
+- [x] `POST /api/sync/push` - 클라이언트 변경사항 일괄 업로드
+- [x] 충돌 해결 로직 (타임스탬프 기반 최신 우선, last-write-wins)
+- [x] 동기화 상태 필드 관리 (`sync_status`: synced / pending)
+- [x] **테스트:** 수동 동기화 버튼 → 서버 Neon DB 반영 확인 ✅
 
 ---
 
-### S7️⃣ 공유 장부 API ⏳
-- [ ] `POST /api/shared-ledgers` - 사용자 초대 (이메일로 검색)
-- [ ] `PATCH /api/shared-ledgers/:id` - 권한 변경 (view/edit)
-- [ ] `DELETE /api/shared-ledgers/:id` - 공유 해제
-- [ ] `GET /api/ledgers/shared` - 나와 공유된 장부 목록 조회
-- [ ] `GET /api/users/search?email=` - 이메일로 사용자 검색
-- **테스트:** 초대 → 권한 변경 → 해제 흐름 확인
+### S7️⃣ 공유 장부 API ✅
+- [x] `POST /api/shared-ledgers` - 사용자 초대 (owner 전용, conflict upsert)
+- [x] `PATCH /api/shared-ledgers/:id` - 권한 변경 (owner만 가능)
+- [x] `DELETE /api/shared-ledgers/:id` - 공유 해제 (owner 또는 공유 사용자 본인)
+- [x] `GET /api/ledgers/shared` - 나와 공유된 장부 목록 조회
+- [x] `GET /api/users/search?email=` - 이메일로 사용자 검색 (신규 /api/users 라우터)
+- [x] ledgerAccess 미들웨어 — 공유 장부 edit 권한 포함
+- [x] **테스트:** 초대 → 권한 변경 → 해제 흐름 확인 ✅
 
 ---
 
@@ -512,9 +528,14 @@
 **2026-04-06** | Android Phase 4-1 완료 (ListViewTab — Phase 3에서 이미 구현됨, progress 반영)
 **2026-04-06** | Android Phase 4-2 완료 (CalendarViewTab + CalendarComposable + dateMillis 네비게이션 연동)
 **2026-04-06** | Android Phase 4-3 완료 (StatisticViewTab + PieChart(도넛) + BarChart + 수입/지출 탭 전환)
+**2026-04-06** | 백엔드 S6 완료 (Delta sync + push API — syncController.js)
+**2026-04-06** | Android Phase 6 완료 (SyncRepository + sync_status DB + HomeScreen sync 버튼 연결)
+**2026-04-06** | 백엔드 S7 완료 (공유 장부 API 전체 — shared/users/ledgers 라우터, dotenv 경로 수정)
+**2026-04-06** | Android Phase 7 완료 (SharedLedgerScreen + 장부 전환 BottomSheet + SettingsScreen 로그아웃)
 
 ---
 
 ## 🎯 다음 단계
 
-**다음 단계:** Android Phase 5 (Push 알림 자동입력 / SMS) 또는 백엔드 S6 (Delta 동기화 API)
+**다음 단계:** Android Phase 8 (SettingsScreen 확장 — 동기화 주기·알림 설정, CategoryManageScreen, SyncWorker) 또는 백엔드 S8 (Render.com 배포)  
+**참고:** Phase 5 (Push 알림 / SMS 자동입력)는 별도 지시 시 진행
