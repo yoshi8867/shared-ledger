@@ -16,7 +16,7 @@
 ██░░░░░░░░░░░░░░░░░░ 13% (10/77) — Phase 1 완료, Phase 2~8 미시작
 
 ### 백엔드 서버 (Node.js)
-██████░░░░░░░░░░░░░░ 38% (S1~S3 완료, S4~S8 미시작)
+████████░░░░░░░░░░░░ 50% (S1~S3, S5 완료, S4·S6~S8 미시작)
 
 ---
 
@@ -447,7 +447,7 @@
 
 ---
 
-### S4️⃣ 인증 API (OAuth) ⏳
+### S4️⃣ 인증 API (OAuth) ⏳ (OAuth 키 발급 후 진행 예정)
 - [ ] `POST /api/auth/google` - Google OAuth 토큰 검증 + JWT 발급
 - [ ] `POST /api/auth/naver` - Naver OAuth 토큰 검증 + JWT 발급
 - [ ] OAuth 신규/기존 유저 분기 처리 (upsert)
@@ -455,13 +455,13 @@
 
 ---
 
-### S5️⃣ 거래 및 카테고리 CRUD API ⏳
-- [ ] `GET/POST /api/ledgers/:ledgerId/transactions` - 거래 조회/추가
-- [ ] `PATCH/DELETE /api/transactions/:id` - 거래 수정/삭제 (소프트 딜리트)
-- [ ] `GET/POST /api/ledgers/:ledgerId/categories` - 카테고리 조회/추가
-- [ ] `PATCH/DELETE /api/categories/:id` - 카테고리 수정/삭제
-- [ ] 권한 체크 미들웨어 (장부 소유자 or 공유 편집 권한)
-- **테스트:** CRUD 전체 흐름 및 권한 거부 케이스 확인
+### S5️⃣ 거래 및 카테고리 CRUD API ✅
+- [x] `GET/POST /api/ledgers/:ledgerId/transactions` - 거래 조회(월별 필터)/추가
+- [x] `PATCH/DELETE /api/transactions/:id` - 거래 수정/삭제 (소프트 딜리트)
+- [x] `GET/POST /api/ledgers/:ledgerId/categories` - 카테고리 조회/추가
+- [x] `PATCH/DELETE /api/categories/:id` - 카테고리 수정/삭제
+- [x] `middleware/ledgerAccess.js` - 장부 접근/편집 권한 체크 미들웨어
+- [x] **테스트:** 37/37 전부 통과 (권한 거부, 유효성 검사, 소프트딜리트 포함) ✅
 
 ---
 
@@ -497,10 +497,11 @@
 
 **2026-04-05** | Phase 1 완료 (Android 앱 인프라 구축 — 10단계 Hilt DI까지)  
 **2026-04-05** | 백엔드 S1 완료 (Node.js 서버 초기 설정, 로컬 기동 확인)  
-**2026-04-05** | 백엔드 S2 완료 (schema.sql 작성 완료 — Neon 커넥션 string 대기 중)
+**2026-04-05** | 백엔드 S2 완료 (schema.sql 작성 완료 — Neon 커넥션 string 대기 중)  
+**2026-04-06** | 백엔드 S5 완료 (거래/카테고리 CRUD API — 37/37 테스트 통과)
 
 ---
 
 ## 🎯 다음 단계
 
-**다음 단계:** 백엔드 S4 (Google / Naver OAuth) 또는 S5 (거래/카테고리 CRUD API)
+**다음 단계:** 백엔드 S6 (Delta 동기화 API) 또는 Android Phase 2 (인증 기능)
