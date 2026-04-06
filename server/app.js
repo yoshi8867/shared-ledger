@@ -10,6 +10,7 @@ const ledgersRouter = require('./routes/ledgers');
 const syncRouter = require('./routes/sync');
 const sharedRouter = require('./routes/shared');
 const settingsRouter = require('./routes/settings');
+const usersRouter = require('./routes/users');
 
 const app = express();
 
@@ -25,6 +26,7 @@ app.use('/api/ledgers', ledgersRouter);
 app.use('/api/sync', syncRouter);
 app.use('/api/shared-ledgers', sharedRouter);
 app.use('/api/settings', settingsRouter);
+app.use('/api/users', usersRouter);
 
 // 404
 app.use((req, res) => {

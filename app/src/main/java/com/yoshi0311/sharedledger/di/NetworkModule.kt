@@ -1,6 +1,7 @@
 package com.yoshi0311.sharedledger.di
 
 import com.yoshi0311.sharedledger.network.api.AuthApi
+import com.yoshi0311.sharedledger.network.api.SharedApi
 import com.yoshi0311.sharedledger.network.api.SyncApi
 import com.yoshi0311.sharedledger.network.interceptor.AuthInterceptor
 import dagger.Module
@@ -50,4 +51,9 @@ object NetworkModule {
     @Singleton
     fun provideSyncApi(retrofit: Retrofit): SyncApi =
         retrofit.create(SyncApi::class.java)
+
+    @Provides
+    @Singleton
+    fun provideSharedApi(retrofit: Retrofit): SharedApi =
+        retrofit.create(SharedApi::class.java)
 }

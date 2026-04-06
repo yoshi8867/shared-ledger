@@ -12,4 +12,10 @@ sealed class Routes(val route: String) {
         fun createRoute(id: Long = -1L, dateMillis: Long = -1L) =
             "transaction_edit?id=$id&dateMillis=$dateMillis"
     }
+
+    object SharedLedger : Routes("shared_ledger/{ledgerId}") {
+        fun createRoute(ledgerId: Long) = "shared_ledger/$ledgerId"
+    }
+
+    object Settings : Routes("settings")
 }

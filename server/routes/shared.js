@@ -1,27 +1,13 @@
 const express = require('express');
 const router = express.Router();
 const authMiddleware = require('../middleware/auth');
+const {
+  getSharedUsers, invite, updatePermission, revokeAccess
+} = require('../controllers/sharedController');
 
-// S7에서 구현 예정
-
-router.post('/', authMiddleware, (req, res) => {
-  // 장부 공유 초대
-  res.status(501).json({ error: 'Not implemented (S7)' });
-});
-
-router.get('/', authMiddleware, (req, res) => {
-  // GET /api/shared-ledgers?ledger_id=1 — 공유 사용자 목록
-  res.status(501).json({ error: 'Not implemented (S7)' });
-});
-
-router.put('/:id', authMiddleware, (req, res) => {
-  // 권한 변경 (view/edit)
-  res.status(501).json({ error: 'Not implemented (S7)' });
-});
-
-router.delete('/:id', authMiddleware, (req, res) => {
-  // 공유 해제
-  res.status(501).json({ error: 'Not implemented (S7)' });
-});
+router.get('/',     authMiddleware, getSharedUsers);
+router.post('/',    authMiddleware, invite);
+router.patch('/:id', authMiddleware, updatePermission);
+router.delete('/:id', authMiddleware, revokeAccess);
 
 module.exports = router;

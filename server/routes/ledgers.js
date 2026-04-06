@@ -35,10 +35,9 @@ router.post('/', authMiddleware, async (req, res) => {
   }
 });
 
-// GET /api/ledgers/shared — 나와 공유된 장부 목록 (S7)
-router.get('/shared', authMiddleware, (req, res) => {
-  res.status(501).json({ error: 'Not implemented (S7)' });
-});
+// GET /api/ledgers/shared — 나와 공유된 장부 목록
+const { getSharedLedgers } = require('../controllers/sharedController');
+router.get('/shared', authMiddleware, getSharedLedgers);
 
 // GET /api/ledgers/:id — 장부 단건 조회
 router.get('/:id', authMiddleware, checkRead, async (req, res) => {

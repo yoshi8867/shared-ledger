@@ -10,6 +10,8 @@ import androidx.navigation.navArgument
 import com.yoshi0311.sharedledger.ui.screens.auth.SignupScreen
 import com.yoshi0311.sharedledger.ui.screens.home.HomeScreen
 import com.yoshi0311.sharedledger.ui.screens.login.LoginScreen
+import com.yoshi0311.sharedledger.ui.screens.settings.SettingsScreen
+import com.yoshi0311.sharedledger.ui.screens.shared.SharedLedgerScreen
 import com.yoshi0311.sharedledger.ui.screens.splash.SplashScreen
 import com.yoshi0311.sharedledger.ui.screens.transaction.TransactionEditScreen
 
@@ -64,6 +66,32 @@ fun AppNavigation(
             HomeScreen(
                 onNavigateToTransactionEdit = { id, dateMillis ->
                     navController.navigate(Routes.TransactionEdit.createRoute(id, dateMillis))
+                },
+                onNavigateToSharedLedger = { ledgerId ->
+                    navController.navigate(Routes.SharedLedger.createRoute(ledgerId))
+                },
+                onNavigateToSettings = {
+                    navController.navigate(Routes.Settings.route)
+                }
+            )
+        }
+
+        composable(
+            route = Routes.SharedLedger.route,
+            arguments = listOf(
+                navArgument("ledgerId") { type = NavType.LongType }
+            )
+        ) {
+            SharedLedgerScreen(onNavigateBack = { navController.popBackStack() })
+        }
+
+        composable(Routes.Settings.route) {
+            SettingsScreen(
+                onNavigateBack = { navController.popBackStack() },
+                onLogout = {
+                    navController.navigate(Routes.Login.route) {
+                        popUpTo(0) { inclusive = true }
+                    }
                 }
             )
         }

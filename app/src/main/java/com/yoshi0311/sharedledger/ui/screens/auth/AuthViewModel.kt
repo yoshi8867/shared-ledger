@@ -57,6 +57,13 @@ class AuthViewModel @Inject constructor(
         }
     }
 
+    fun logout() {
+        viewModelScope.launch {
+            authRepository.logout()
+            _uiState.value = AuthUiState(isSuccess = true)
+        }
+    }
+
     fun clearError() {
         _uiState.value = _uiState.value.copy(error = null)
     }

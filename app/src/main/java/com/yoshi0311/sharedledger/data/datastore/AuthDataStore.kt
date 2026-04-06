@@ -18,22 +18,31 @@ val Context.dataStore: DataStore<Preferences> by preferencesDataStore(name = "au
 @Singleton
 class AuthDataStore @Inject constructor(@ApplicationContext private val context: Context) {
 
-    private val ACCESS_TOKEN  = stringPreferencesKey("access_token")
-    private val REFRESH_TOKEN = stringPreferencesKey("refresh_token")
-    private val LEDGER_ID     = longPreferencesKey("ledger_id")
-    private val LAST_SYNCED_AT = stringPreferencesKey("last_synced_at")
+    private val ACCESS_TOKEN     = stringPreferencesKey("access_token")
+    private val REFRESH_TOKEN    = stringPreferencesKey("refresh_token")
+    private val LEDGER_ID        = longPreferencesKey("ledger_id")
+    private val ACTIVE_LEDGER_ID = longPreferencesKey("active_ledger_id")
+    private val LAST_SYNCED_AT   = stringPreferencesKey("last_synced_at")
 
-    val accessToken:   Flow<String?> = context.dataStore.data.map { it[ACCESS_TOKEN] }
-    val refreshToken:  Flow<String?> = context.dataStore.data.map { it[REFRESH_TOKEN] }
-    val ledgerId:      Flow<Long?>   = context.dataStore.data.map { it[LEDGER_ID] }
-    val lastSyncedAt:  Flow<String?> = context.dataStore.data.map { it[LAST_SYNCED_AT] }
+    val accessToken:     Flow<String?> = context.dataStore.data.map { it[ACCESS_TOKEN] }
+    val refreshToken:    Flow<String?> = context.dataStore.data.map { it[REFRESH_TOKEN] }
+    val ledgerId:        Flow<Long?>   = context.dataStore.data.map { it[LEDGER_ID] }
+    val activeLedgerId:  Flow<Long?>   = context.dataStore.data.map { it[ACTIVE_LEDGER_ID] }
+    val lastSyncedAt:    Flow<String?> = context.dataStore.data.map { it[LAST_SYNCED_AT] }
 
     suspend fun saveTokens(accessToken: String, refreshToken: String, ledgerId: Long? = null) {
         context.dataStore.edit { prefs ->
             prefs[ACCESS_TOKEN]  = accessToken
             prefs[REFRESH_TOKEN] = refreshToken
-            if (ledgerId != null) prefs[LEDGER_ID] = ledgerId
+            if (ledgerId != null) {
+                prefs[LEDGER_ID]        = ledgerId
+                prefs[ACTIVE_LEDGER_ID] = ledgerId // 로그인 시 활성 장부 = 내 장부
+            }
         }
+    }
+
+    suspend fun setActiveLedgerId(id: Long) {
+        context.dataStore.edit { it[ACTIVE_LEDGER_ID] = id }
     }
 
     suspend fun saveLastSyncedAt(isoTimestamp: String) {

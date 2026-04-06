@@ -22,8 +22,11 @@ class AuthRepository @Inject constructor(
     private val api: AuthApi,
     private val authDataStore: AuthDataStore
 ) {
-    val accessToken: Flow<String?> = authDataStore.accessToken
-    val ledgerId:    Flow<Long?>   = authDataStore.ledgerId
+    val accessToken:    Flow<String?> = authDataStore.accessToken
+    val ledgerId:       Flow<Long?>   = authDataStore.ledgerId
+    val activeLedgerId: Flow<Long?>   = authDataStore.activeLedgerId
+
+    suspend fun setActiveLedgerId(id: Long) = authDataStore.setActiveLedgerId(id)
 
     suspend fun isLoggedIn(): Boolean =
         authDataStore.accessToken.firstOrNull() != null
