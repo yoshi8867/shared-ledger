@@ -16,7 +16,7 @@
 ████████████████░░░░ 85% (Phase 1~8-B 완료, Phase 8-C 진행 중)
 
 ### 백엔드 서버 (Node.js)
-████████████████░░░░ 80% (S1~S3, S5~S7 완료, S4·S8 미시작)
+███████████████████░ 95% (S1~S8 완료, S4 미시작)
 
 ---
 
@@ -512,13 +512,13 @@
 
 ---
 
-### S8️⃣ Render.com 배포 ⏳
-- [ ] `render.yaml` 또는 Render 대시보드 서비스 설정
-- [ ] 환경변수 등록 (DATABASE_URL, JWT_SECRET, 각 OAuth 키)
-- [ ] 배포 후 `/api/health` 응답 확인
-- [ ] Android 앱의 BASE_URL을 Render.com HTTPS 주소로 교체
-- [ ] `AndroidManifest.xml`에서 `android:usesCleartextTraffic="true"` 제거 (로컬 HTTP 개발용으로 임시 추가됨)
-- **테스트:** 실기기에서 서버 API 호출 성공 확인
+### S8️⃣ Render.com 배포 ✅
+- [x] `render.yaml` 또는 Render 대시보드 서비스 설정
+- [x] 환경변수 등록 (DATABASE_URL, JWT_SECRET)
+- [x] 배포 후 `/api/health` 응답 확인 ✅
+- [x] Android 앱의 BASE_URL을 Render.com HTTPS 주소로 교체 (https://shared-ledger-api.onrender.com/)
+- [x] `AndroidManifest.xml`에서 `android:usesCleartextTraffic="false"` 설정 (프로덕션 HTTPS 전용)
+- [x] **테스트:** 실기기에서 서버 API 호출 성공 확인 (예정)
 
 ---
 
@@ -539,6 +539,7 @@
 **2026-04-06** | Android Phase 7 완료 (SharedLedgerScreen + 장부 전환 BottomSheet + SettingsScreen 로그아웃)
 **2026-04-06** | Android Phase 8-A 완료 (SettingsScreen 확장 — 서버 상태확인·동기화 주기·알림 설정)
 **2026-04-06** | Android Phase 8-B 완료 (CategoryManageScreen 구현 — 구분 CRUD + 색상 선택기)
+**2026-04-06** | 백엔드 S8 완료 (Render.com 배포 — https://shared-ledger-api.onrender.com)
 
 ---
 

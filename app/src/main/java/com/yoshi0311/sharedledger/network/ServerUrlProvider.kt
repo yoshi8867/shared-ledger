@@ -6,7 +6,7 @@ import javax.inject.Singleton
 @Singleton
 class ServerUrlProvider @Inject constructor() {
     companion object {
-        const val DEFAULT_URL = "http://172.30.5.241:3000/"
+        const val DEFAULT_URL = "https://shared-ledger-api.onrender.com/"
     }
 
     @Volatile
