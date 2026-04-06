@@ -21,7 +21,8 @@ data class RefreshRequest(
 
 data class AuthResponse(
     @SerializedName("access_token") val accessToken: String,
-    @SerializedName("refresh_token") val refreshToken: String
+    @SerializedName("refresh_token") val refreshToken: String,
+    @SerializedName("ledger_id") val ledgerId: Long? = null
 )
 
 interface AuthApi {

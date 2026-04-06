@@ -304,13 +304,18 @@
 
 ---
 
-### Phase 6 — 양방향 동기화 ⏳
+### Phase 6 — 양방향 동기화 🔄
 
-#### 1️⃣ Retrofit 네트워크 레이어 구성 ⏳
-- [ ] network/api/TransactionApi.kt, CategoryApi.kt, SyncApi.kt
-- [ ] network/interceptor/AuthInterceptor.kt (JWT 헤더 자동 삽입)
-- [ ] di/NetworkModule.kt (Retrofit, OkHttp Hilt 제공)
-- [ ] **테스트:** API 호출 및 응답 파싱 확인
+#### 1️⃣ 서버 S6 + Retrofit 네트워크 레이어 ✅
+- [x] server/controllers/syncController.js — delta / push 구현
+- [x] server/routes/sync.js 연결
+- [x] authController.js login/signup 응답에 ledger_id 포함
+- [x] network/api/SyncApi.kt + DTO 데이터 클래스
+- [x] di/NetworkModule.kt — SyncApi 제공
+- [x] AuthDataStore — ledger_id / last_synced_at 저장
+- [x] AuthRepository — ledgerId Flow 노출
+- [x] HomeViewModel / TransactionEditViewModel — 하드코딩 ledgerId 제거, DataStore 값 사용
+- [ ] **테스트:** 로그인 후 ledger_id 정상 저장 확인 ⏳
 
 ---
 
@@ -490,7 +495,8 @@
 - [ ] `render.yaml` 또는 Render 대시보드 서비스 설정
 - [ ] 환경변수 등록 (DATABASE_URL, JWT_SECRET, 각 OAuth 키)
 - [ ] 배포 후 `/api/health` 응답 확인
-- [ ] Android 앱의 BASE_URL을 Render.com 주소로 교체
+- [ ] Android 앱의 BASE_URL을 Render.com HTTPS 주소로 교체
+- [ ] `AndroidManifest.xml`에서 `android:usesCleartextTraffic="true"` 제거 (로컬 HTTP 개발용으로 임시 추가됨)
 - **테스트:** 실기기에서 서버 API 호출 성공 확인
 
 ---

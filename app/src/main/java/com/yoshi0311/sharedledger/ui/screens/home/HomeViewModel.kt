@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.yoshi0311.sharedledger.data.db.entity.CategoryEntity
 import com.yoshi0311.sharedledger.data.db.entity.TransactionEntity
+import com.yoshi0311.sharedledger.data.repository.AuthRepository
 import com.yoshi0311.sharedledger.data.repository.CategoryRepository
 import com.yoshi0311.sharedledger.data.repository.TransactionRepository
 import com.yoshi0311.sharedledger.util.AppYearMonth
@@ -15,6 +16,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import java.util.Calendar
 import javax.inject.Inject
@@ -30,11 +32,14 @@ data class HomeUiState(
 @HiltViewModel
 class HomeViewModel @Inject constructor(
     private val transactionRepo: TransactionRepository,
-    private val categoryRepo: CategoryRepository
+    private val categoryRepo: CategoryRepository,
+    private val authRepo: AuthRepository
 ) : ViewModel() {
 
-    // 추후 공유 장부 지원 시 동적으로 변경
-    private val currentLedgerId = 1L
+    // DataStore에서 서버 ledger_id 읽기 (없으면 1L 폴백)
+    private val currentLedgerId: StateFlow<Long> = authRepo.ledgerId
+        .map { it ?: 1L }
+        .stateIn(viewModelScope, SharingStarted.Eagerly, 1L)
 
     // 탭 선택 상태 — HomeScreen 재구성 후에도 유지
     private val _selectedTab = MutableStateFlow(0)
@@ -52,13 +57,15 @@ class HomeViewModel @Inject constructor(
     val selectedMonth: StateFlow<AppYearMonth> = _selectedMonth.asStateFlow()
 
     @OptIn(ExperimentalCoroutinesApi::class)
-    val uiState: StateFlow<HomeUiState> = _selectedMonth
-        .flatMapLatest { month ->
+    val uiState: StateFlow<HomeUiState> = combine(
+        _selectedMonth, currentLedgerId
+    ) { month, ledgerId -> Pair(month, ledgerId) }
+        .flatMapLatest { (month, ledgerId) ->
             combine(
-                transactionRepo.getByLedgerIdAndMonth(currentLedgerId, month.format()),
-                categoryRepo.getByLedgerId(currentLedgerId),
-                transactionRepo.getTotalIncomeByMonth(currentLedgerId, month.format()),
-                transactionRepo.getTotalExpenseByMonth(currentLedgerId, month.format())
+                transactionRepo.getByLedgerIdAndMonth(ledgerId, month.format()),
+                categoryRepo.getByLedgerId(ledgerId),
+                transactionRepo.getTotalIncomeByMonth(ledgerId, month.format()),
+                transactionRepo.getTotalExpenseByMonth(ledgerId, month.format())
             ) { transactions, categories, income, expense ->
                 HomeUiState(
                     transactions = transactions,

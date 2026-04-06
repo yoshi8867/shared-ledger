@@ -52,10 +52,12 @@ async function signup(req, res) {
     const user = userResult.rows[0];
 
     // 기본 장부 자동 생성
-    await pool.query(
-      `INSERT INTO ledgers (owner_id, ledger_name) VALUES ($1, '내 장부')`,
+    const ledgerResult = await pool.query(
+      `INSERT INTO ledgers (owner_id, ledger_name) VALUES ($1, '내 장부')
+       RETURNING ledger_id`,
       [user.user_id]
     );
+    const ledger_id = ledgerResult.rows[0].ledger_id;
 
     const access_token = signAccessToken(user);
     const refresh_token = signRefreshToken(user);
@@ -63,6 +65,7 @@ async function signup(req, res) {
     res.status(201).json({
       access_token,
       refresh_token,
+      ledger_id,
       user: {
         user_id: user.user_id,
         email: user.email,
@@ -108,9 +111,17 @@ async function login(req, res) {
     const access_token = signAccessToken(user);
     const refresh_token = signRefreshToken(user);
 
+    // 주 장부 ID 조회
+    const ledgerResult = await pool.query(
+      'SELECT ledger_id FROM ledgers WHERE owner_id = $1 ORDER BY created_at ASC LIMIT 1',
+      [user.user_id]
+    );
+    const ledger_id = ledgerResult.rows[0]?.ledger_id ?? null;
+
     res.json({
       access_token,
       refresh_token,
+      ledger_id,
       user: {
         user_id: user.user_id,
         email: user.email,

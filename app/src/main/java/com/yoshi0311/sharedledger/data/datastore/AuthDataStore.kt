@@ -4,6 +4,7 @@ import android.content.Context
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.edit
+import androidx.datastore.preferences.core.longPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
 import dagger.hilt.android.qualifiers.ApplicationContext
@@ -17,23 +18,34 @@ val Context.dataStore: DataStore<Preferences> by preferencesDataStore(name = "au
 @Singleton
 class AuthDataStore @Inject constructor(@ApplicationContext private val context: Context) {
 
-    private val ACCESS_TOKEN = stringPreferencesKey("access_token")
+    private val ACCESS_TOKEN  = stringPreferencesKey("access_token")
     private val REFRESH_TOKEN = stringPreferencesKey("refresh_token")
+    private val LEDGER_ID     = longPreferencesKey("ledger_id")
+    private val LAST_SYNCED_AT = stringPreferencesKey("last_synced_at")
 
-    val accessToken: Flow<String?> = context.dataStore.data.map { it[ACCESS_TOKEN] }
-    val refreshToken: Flow<String?> = context.dataStore.data.map { it[REFRESH_TOKEN] }
+    val accessToken:   Flow<String?> = context.dataStore.data.map { it[ACCESS_TOKEN] }
+    val refreshToken:  Flow<String?> = context.dataStore.data.map { it[REFRESH_TOKEN] }
+    val ledgerId:      Flow<Long?>   = context.dataStore.data.map { it[LEDGER_ID] }
+    val lastSyncedAt:  Flow<String?> = context.dataStore.data.map { it[LAST_SYNCED_AT] }
 
-    suspend fun saveTokens(accessToken: String, refreshToken: String) {
+    suspend fun saveTokens(accessToken: String, refreshToken: String, ledgerId: Long? = null) {
         context.dataStore.edit { prefs ->
-            prefs[ACCESS_TOKEN] = accessToken
+            prefs[ACCESS_TOKEN]  = accessToken
             prefs[REFRESH_TOKEN] = refreshToken
+            if (ledgerId != null) prefs[LEDGER_ID] = ledgerId
         }
+    }
+
+    suspend fun saveLastSyncedAt(isoTimestamp: String) {
+        context.dataStore.edit { it[LAST_SYNCED_AT] = isoTimestamp }
     }
 
     suspend fun clearTokens() {
         context.dataStore.edit { prefs ->
             prefs.remove(ACCESS_TOKEN)
             prefs.remove(REFRESH_TOKEN)
+            prefs.remove(LEDGER_ID)
+            prefs.remove(LAST_SYNCED_AT)
         }
     }
 }

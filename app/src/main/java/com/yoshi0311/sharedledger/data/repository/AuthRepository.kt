@@ -23,19 +23,20 @@ class AuthRepository @Inject constructor(
     private val authDataStore: AuthDataStore
 ) {
     val accessToken: Flow<String?> = authDataStore.accessToken
+    val ledgerId:    Flow<Long?>   = authDataStore.ledgerId
 
     suspend fun isLoggedIn(): Boolean =
         authDataStore.accessToken.firstOrNull() != null
 
     suspend fun login(email: String, password: String): AuthResult = runCatching {
         val res = api.login(LoginRequest(email, password))
-        authDataStore.saveTokens(res.accessToken, res.refreshToken)
+        authDataStore.saveTokens(res.accessToken, res.refreshToken, res.ledgerId)
         AuthResult.Success
     }.getOrElse { e -> AuthResult.Error(e.toDisplayMessage()) }
 
     suspend fun signup(name: String, email: String, password: String): AuthResult = runCatching {
         val res = api.signup(SignupRequest(email, password, name))
-        authDataStore.saveTokens(res.accessToken, res.refreshToken)
+        authDataStore.saveTokens(res.accessToken, res.refreshToken, res.ledgerId)
         AuthResult.Success
     }.getOrElse { e -> AuthResult.Error(e.toDisplayMessage()) }
 
