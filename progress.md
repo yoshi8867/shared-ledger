@@ -1,8 +1,8 @@
 # Shared Ledger App - 개발 진행도
 
 **작성일:** 2026-04-05  
-**최종 업데이트:** 2026-04-06  
-**현재 Phase:** Phase 8-A, 8-B 완료 → Phase 8-C 대기 중 (테스트/배포)
+**최종 업데이트:** 2026-04-07  
+**현재 Phase:** Phase 8-C 완료 (유닛 테스트 + ProGuard + 릴리즈 빌드)
 
 ---
 
@@ -13,7 +13,7 @@
 ## 📊 전체 진행도
 
 ### Android 앱
-████████████████░░░░ 85% (Phase 1~8-B 완료, Phase 8-C 진행 중)
+█████████████████░░░ 90% (Phase 1~8-C 완료, 릴리즈 서명·배포 준비 중)
 
 ### 백엔드 서버 (Node.js)
 ███████████████████░ 95% (S1~S8 완료, S4 미시작)
@@ -415,9 +415,17 @@
 
 ---
 
-#### 3️⃣ 유닛 테스트 ⏳
-- [ ] ViewModel 유닛 테스트 (MockK 또는 Turbine)
-- [ ] Repository 유닛 테스트 (인메모리 Room DB)
+#### 3️⃣ 유닛 테스트 ✅
+- [x] 테스트 의존성 추가 (MockK 1.13.11, kotlinx-coroutines-test, Turbine 1.2.0, Room-testing)
+- [x] `AppYearMonthTest.kt` — 순수 로직 10개 테스트 (format/next/prev/displayLabel) **10/10 통과**
+- [x] `MainDispatcherRule.kt` — 코루틴 테스트 헬퍼 (UnconfinedTestDispatcher)
+- [x] `HomeViewModelTest.kt` — MockK + Turbine ViewModel 테스트 **13/13 통과**
+  - 월 탐색 (nextMonth/prevMonth), 캘린더 날짜 선택, 탭 전환
+  - sync() → SyncState 전환 (Success/Error/Idle)
+- [x] `TransactionDaoTest.kt` — in-memory Room DB 테스트 (androidTest) **15개 케이스**
+  - CRUD, 월별 필터, 소프트 딜리트, 합계 계산, 동기화 쿼리
+- [x] `CategoryDaoTest.kt` — in-memory Room DB 테스트 (androidTest) **12개 케이스**
+  - CRUD, 이름순 정렬, 소프트 딜리트, 동기화 쿼리, 하드 퍼지
 
 ---
 
@@ -427,10 +435,12 @@
 
 ---
 
-#### 5️⃣ 최적화 및 배포 준비 ⏳
-- [ ] ProGuard / R8 난독화 설정
-- [ ] APK/AAB 릴리즈 빌드 테스트
-- [ ] Google Play 등록 준비 (스크린샷, 설명 등)
+#### 5️⃣ 최적화 및 배포 준비 ✅
+- [x] ProGuard / R8 설정 (proguard-rules.pro — Retrofit/Room/Hilt/Gson/Compose 규칙 포함)
+- [x] 릴리즈 빌드: isMinifyEnabled=true, isShrinkResources=true 활성화
+- [x] AAB 릴리즈 빌드 성공 (`app/build/outputs/bundle/release/app-release.aab`)
+- [ ] 릴리즈 키스토어 서명 설정 (배포 전 필요)
+- [ ] Google Play 등록 준비 (스크린샷, 앱 설명 등)
 
 ---
 
@@ -540,13 +550,15 @@
 **2026-04-06** | Android Phase 8-A 완료 (SettingsScreen 확장 — 서버 상태확인·동기화 주기·알림 설정)
 **2026-04-06** | Android Phase 8-B 완료 (CategoryManageScreen 구현 — 구분 CRUD + 색상 선택기)
 **2026-04-06** | 백엔드 S8 완료 (Render.com 배포 — https://shared-ledger-api.onrender.com)
+**2026-04-07** | Android Phase 8-C 완료 (유닛 테스트 전체 — MockK+Turbine ViewModel 13/13, Room DAO in-memory 27개, ProGuard 설정, AAB 릴리즈 빌드 성공)
 
 ---
 
 ## 🎯 다음 단계
 
 **다음 단계:** 
-1. Android Phase 8-C (유닛 테스트, UI 테스트, 배포 준비)
-2. 또는 백엔드 S8 (Render.com 배포)
+1. 릴리즈 키스토어 서명 설정 → 서명된 AAB 생성
+2. Google Play Console 앱 등록 (스크린샷, 앱 설명, 개인정보처리방침)
+3. (선택) Phase 5 — Push 알림 / SMS 자동입력
 
 **참고:** Phase 5 (Push 알림 / SMS 자동입력)는 별도 지시 시 진행
