@@ -85,7 +85,7 @@ class AutoFillRepository @Inject constructor(
                 type        = type,
                 amount      = amount,
                 date        = date,
-                time        = timeFmt.format(item.createdAt),
+                time        = timeFmt.format(date),
                 description = description
             )
         )

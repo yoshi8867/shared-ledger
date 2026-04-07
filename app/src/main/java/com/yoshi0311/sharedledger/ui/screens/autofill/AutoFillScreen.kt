@@ -26,6 +26,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.AccessTime
 import androidx.compose.material.icons.filled.CalendarMonth
 import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.filled.Message
@@ -57,7 +58,9 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.material3.TimePicker
 import androidx.compose.material3.rememberDatePickerState
+import androidx.compose.material3.rememberTimePickerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
@@ -87,6 +90,7 @@ import com.yoshi0311.sharedledger.data.db.entity.PendingNotificationEntity
 import com.yoshi0311.sharedledger.service.autofill.NotificationParserRegistry
 import com.yoshi0311.sharedledger.ui.screens.transaction.CategoryDialog
 import java.text.SimpleDateFormat
+import java.util.Calendar
 import java.util.Date
 import java.util.Locale
 
@@ -472,17 +476,24 @@ private fun PendingNotificationItem(
     onApprove: (amount: Long, type: String, date: Date, description: String, categoryId: Long?) -> Unit,
     onReject: () -> Unit
 ) {
+    val initCal = remember(item.id) {
+        Calendar.getInstance().apply { time = item.parsedDate ?: Date() }
+    }
     var selectedType       by remember(item.id) { mutableStateOf(item.parsedType ?: "expense") }
     var amountText         by remember(item.id) { mutableStateOf(item.parsedAmount?.toString() ?: "") }
     var selectedDate       by remember(item.id) { mutableStateOf(item.parsedDate ?: Date()) }
+    var selectedHour       by remember(item.id) { mutableIntStateOf(initCal.get(Calendar.HOUR_OF_DAY)) }
+    var selectedMinute     by remember(item.id) { mutableIntStateOf(initCal.get(Calendar.MINUTE)) }
     var description        by remember(item.id) { mutableStateOf(item.parsedDescription ?: "") }
     var selectedCategoryId by remember(item.id) { mutableStateOf<Long?>(null) }
     var showDatePicker     by remember { mutableStateOf(false) }
+    var showTimePicker     by remember { mutableStateOf(false) }
     var showCategoryDialog by remember { mutableStateOf(false) }
 
     val datePickerState = rememberDatePickerState(initialSelectedDateMillis = selectedDate.time)
-    val dateFmt  = remember { SimpleDateFormat("yyyy.MM.dd", Locale.KOREAN) }
-    val timeFmt  = remember { SimpleDateFormat("MM.dd HH:mm", Locale.KOREAN) }
+    val dateFmt    = remember { SimpleDateFormat("yyyy.MM.dd", Locale.KOREAN) }
+    val headerFmt  = remember { SimpleDateFormat("MM.dd HH:mm", Locale.KOREAN) }
+    val timeText   = "%02d:%02d".format(selectedHour, selectedMinute)
 
     val isAmountValid = amountText.toLongOrNull()?.let { it > 0 } == true
 
@@ -512,25 +523,11 @@ private fun PendingNotificationItem(
                     overflow = TextOverflow.Ellipsis
                 )
                 Text(
-                    text  = timeFmt.format(item.createdAt),
+                    text  = headerFmt.format(item.createdAt),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
-
-            Spacer(Modifier.height(4.dp))
-
-            // 원본 텍스트 (작은 글씨)
-            Text(
-                text     = buildString {
-                    if (!item.title.isNullOrBlank()) append("[${item.title}] ")
-                    append(item.body)
-                },
-                style    = MaterialTheme.typography.bodySmall,
-                color    = MaterialTheme.colorScheme.onSurfaceVariant,
-                maxLines = 3,
-                overflow = TextOverflow.Ellipsis
-            )
 
             HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
 
@@ -552,36 +549,57 @@ private fun PendingNotificationItem(
 
             // 금액 입력
             OutlinedTextField(
-                value         = amountText,
-                onValueChange = { amountText = it.filter { c -> c.isDigit() } },
-                label         = { Text("금액") },
-                modifier      = Modifier.fillMaxWidth(),
-                singleLine    = true,
+                value           = amountText,
+                onValueChange   = { amountText = it.filter { c -> c.isDigit() } },
+                label           = { Text("금액") },
+                modifier        = Modifier.fillMaxWidth(),
+                singleLine      = true,
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                trailingIcon  = { Text("원", style = MaterialTheme.typography.bodyMedium, modifier = Modifier.padding(end = 8.dp)) },
-                isError       = amountText.isNotBlank() && !isAmountValid
+                trailingIcon    = { Text("원", style = MaterialTheme.typography.bodyMedium, modifier = Modifier.padding(end = 8.dp)) },
+                isError         = amountText.isNotBlank() && !isAmountValid
             )
 
             Spacer(Modifier.height(8.dp))
 
-            // 날짜 (클릭하면 DatePicker)
-            Box {
-                OutlinedTextField(
-                    value         = dateFmt.format(selectedDate),
-                    onValueChange = {},
-                    label         = { Text("날짜") },
-                    modifier      = Modifier.fillMaxWidth(),
-                    readOnly      = true,
-                    enabled       = false,
-                    trailingIcon  = { Icon(Icons.Filled.CalendarMonth, null) },
-                    colors        = OutlinedTextFieldDefaults.colors(
-                        disabledTextColor         = MaterialTheme.colorScheme.onSurface,
-                        disabledLabelColor        = MaterialTheme.colorScheme.onSurfaceVariant,
-                        disabledBorderColor       = MaterialTheme.colorScheme.outline,
-                        disabledTrailingIconColor = MaterialTheme.colorScheme.onSurfaceVariant
+            // 날짜 + 시각 (2:1 비율)
+            Row(modifier = Modifier.fillMaxWidth()) {
+                Box(modifier = Modifier.weight(2f)) {
+                    OutlinedTextField(
+                        value         = dateFmt.format(selectedDate),
+                        onValueChange = {},
+                        label         = { Text("날짜") },
+                        modifier      = Modifier.fillMaxWidth(),
+                        readOnly      = true,
+                        enabled       = false,
+                        trailingIcon  = { Icon(Icons.Filled.CalendarMonth, null) },
+                        colors        = OutlinedTextFieldDefaults.colors(
+                            disabledTextColor         = MaterialTheme.colorScheme.onSurface,
+                            disabledLabelColor        = MaterialTheme.colorScheme.onSurfaceVariant,
+                            disabledBorderColor       = MaterialTheme.colorScheme.outline,
+                            disabledTrailingIconColor = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
                     )
-                )
-                Box(modifier = Modifier.matchParentSize().clickable { showDatePicker = true })
+                    Box(modifier = Modifier.matchParentSize().clickable { showDatePicker = true })
+                }
+                Spacer(Modifier.width(8.dp))
+                Box(modifier = Modifier.weight(1f)) {
+                    OutlinedTextField(
+                        value         = timeText,
+                        onValueChange = {},
+                        label         = { Text("시각") },
+                        modifier      = Modifier.fillMaxWidth(),
+                        readOnly      = true,
+                        enabled       = false,
+                        trailingIcon  = { Icon(Icons.Filled.AccessTime, null) },
+                        colors        = OutlinedTextFieldDefaults.colors(
+                            disabledTextColor         = MaterialTheme.colorScheme.onSurface,
+                            disabledLabelColor        = MaterialTheme.colorScheme.onSurfaceVariant,
+                            disabledBorderColor       = MaterialTheme.colorScheme.outline,
+                            disabledTrailingIconColor = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    )
+                    Box(modifier = Modifier.matchParentSize().clickable { showTimePicker = true })
+                }
             }
 
             Spacer(Modifier.height(8.dp))
@@ -593,6 +611,20 @@ private fun PendingNotificationItem(
                 label         = { Text("내용") },
                 modifier      = Modifier.fillMaxWidth(),
                 singleLine    = true
+            )
+
+            Spacer(Modifier.height(4.dp))
+
+            // 원본 알림 텍스트
+            Text(
+                text     = buildString {
+                    if (!item.title.isNullOrBlank()) append("[${item.title}] ")
+                    append(item.body)
+                },
+                style    = MaterialTheme.typography.bodySmall,
+                color    = MaterialTheme.colorScheme.onSurfaceVariant,
+                maxLines = 3,
+                overflow = TextOverflow.Ellipsis
             )
 
             Spacer(Modifier.height(8.dp))
@@ -624,7 +656,14 @@ private fun PendingNotificationItem(
                 Button(
                     onClick  = {
                         val amt = amountText.toLongOrNull() ?: return@Button
-                        onApprove(amt, selectedType, selectedDate, description, selectedCategoryId)
+                        val cal = Calendar.getInstance().apply {
+                            time = selectedDate
+                            set(Calendar.HOUR_OF_DAY, selectedHour)
+                            set(Calendar.MINUTE, selectedMinute)
+                            set(Calendar.SECOND, 0)
+                            set(Calendar.MILLISECOND, 0)
+                        }
+                        onApprove(amt, selectedType, cal.time, description, selectedCategoryId)
                     },
                     enabled  = isAmountValid,
                     modifier = Modifier.weight(1f)
@@ -662,6 +701,49 @@ private fun PendingNotificationItem(
             }
         ) {
             DatePicker(state = datePickerState)
+        }
+    }
+
+    // TimePicker 다이얼로그
+    if (showTimePicker) {
+        val timePickerState = rememberTimePickerState(
+            initialHour   = selectedHour,
+            initialMinute = selectedMinute,
+            is24Hour      = true
+        )
+        Dialog(
+            onDismissRequest = { showTimePicker = false },
+            properties       = DialogProperties(usePlatformDefaultWidth = false)
+        ) {
+            Surface(
+                shape          = MaterialTheme.shapes.extraLarge,
+                tonalElevation = 6.dp,
+                modifier       = Modifier.padding(horizontal = 24.dp)
+            ) {
+                Column(
+                    modifier            = Modifier.padding(24.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Text(
+                        text     = "시각 선택",
+                        style    = MaterialTheme.typography.labelMedium,
+                        modifier = Modifier.fillMaxWidth().padding(bottom = 20.dp)
+                    )
+                    TimePicker(state = timePickerState)
+                    Row(
+                        modifier              = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.End
+                    ) {
+                        TextButton(onClick = { showTimePicker = false }) { Text("취소") }
+                        Spacer(Modifier.width(8.dp))
+                        TextButton(onClick = {
+                            selectedHour   = timePickerState.hour
+                            selectedMinute = timePickerState.minute
+                            showTimePicker = false
+                        }) { Text("확인") }
+                    }
+                }
+            }
         }
     }
 }

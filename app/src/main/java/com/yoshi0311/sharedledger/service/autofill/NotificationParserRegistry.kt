@@ -3,6 +3,7 @@ package com.yoshi0311.sharedledger.service.autofill
 import com.yoshi0311.sharedledger.service.autofill.parsers.GenericKoreanFinanceParser
 import com.yoshi0311.sharedledger.service.autofill.parsers.HanaCardParser
 import com.yoshi0311.sharedledger.service.autofill.parsers.KBBankParser
+import com.yoshi0311.sharedledger.service.autofill.parsers.KakaoBankParser
 import com.yoshi0311.sharedledger.service.autofill.parsers.KakaoPayParser
 import com.yoshi0311.sharedledger.service.autofill.parsers.ShinhanCardParser
 import com.yoshi0311.sharedledger.service.autofill.parsers.TossParser
@@ -17,6 +18,7 @@ object NotificationParserRegistry {
         SupportedApp("com.kbcard.kbfinancegroup",                  "KB국민카드"),
         SupportedApp("com.hanacard.mobilecard",                    "하나카드"),
         SupportedApp("com.hanabank.ebk.channel.android.hananbank", "하나은행"),
+        SupportedApp("com.hanaskcard.paycla",                      "하나페이"),
         SupportedApp("com.shcard.shinhancard",                     "신한카드"),
         SupportedApp("com.shinhan.smartcaremng",                   "신한SOL"),
         SupportedApp("com.kakaocorp.mobile.kakaopay",              "카카오페이"),
@@ -30,6 +32,7 @@ object NotificationParserRegistry {
 
     private val parsers: List<NotificationParser> = listOf(
         KBBankParser(),
+        KakaoBankParser(),
         HanaCardParser(),
         ShinhanCardParser(),
         KakaoPayParser(),

@@ -16,7 +16,6 @@ class KakaoPayParser : BaseKoreanFinanceParser() {
     override val packageNames = listOf(
         "com.kakaocorp.mobile.kakaopay", // 카카오페이 앱
         "com.kakao.talk",                 // 카카오톡 (카카오페이 알림 경유)
-        "com.kakaobank.channel"           // 카카오뱅크
     )
 
     override fun parse(title: String?, body: String): ParsedTransaction {

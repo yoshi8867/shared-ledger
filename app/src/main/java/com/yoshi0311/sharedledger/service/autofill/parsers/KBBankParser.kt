@@ -28,8 +28,21 @@ class KBBankParser : BaseKoreanFinanceParser() {
     }
 
     private fun extractKBDescription(body: String): String? {
-        // KB 알림에서 카드번호 패턴 제거 후 상호명 추출
-        val cleaned = body.replace(Regex("\\(\\d{4}\\)"), "")
-        return extractDescription(cleaned)
+        // 계좌번호 패턴(343602-**-***066) 이후 ~ 거래유형 키워드 이전 텍스트 추출
+        val accountMatch = ACCOUNT_REGEX.find(body)
+        if (accountMatch != null) {
+            val afterAccount = body.substring(accountMatch.range.last + 1).trim()
+            val keywordMatch = TX_TYPE_REGEX.find(afterAccount)
+            if (keywordMatch != null) {
+                return afterAccount.substring(0, keywordMatch.range.first).trim()
+                    .takeIf { it.isNotBlank() }
+            }
+        }
+        return extractDescription(body)
+    }
+
+    companion object {
+        private val ACCOUNT_REGEX  = Regex("""[\d*]+-\*+-[\d*]+""")
+        private val TX_TYPE_REGEX  = Regex("""(스마트폰출금|인터넷이체|ATM출금|이체|출금|결제)""")
     }
 }
