@@ -82,8 +82,10 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.yoshi0311.sharedledger.data.db.entity.CategoryEntity
 import com.yoshi0311.sharedledger.data.db.entity.PendingNotificationEntity
 import com.yoshi0311.sharedledger.service.autofill.NotificationParserRegistry
+import com.yoshi0311.sharedledger.ui.screens.transaction.CategoryDialog
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -100,6 +102,7 @@ fun AutoFillScreen(
     val enabledPackages by viewModel.enabledPackages.collectAsStateWithLifecycle()
     val installedApps   by viewModel.installedApps.collectAsStateWithLifecycle()
     val isLoadingApps   by viewModel.isLoadingApps.collectAsStateWithLifecycle()
+    val categories      by viewModel.categories.collectAsStateWithLifecycle()
 
     val context = LocalContext.current
     val lifecycleOwner = LocalLifecycleOwner.current
@@ -240,11 +243,13 @@ fun AutoFillScreen(
                 ) {
                     items(items, key = { it.id }) { item ->
                         PendingNotificationItem(
-                            item      = item,
-                            onApprove = { amount, type, date, desc ->
-                                viewModel.approve(item, amount, type, date, desc)
+                            item          = item,
+                            categories    = categories,
+                            onAddCategory = { name, color -> viewModel.addCategory(name, color) },
+                            onApprove     = { amount, type, date, desc, categoryId ->
+                                viewModel.approve(item, amount, type, date, desc, categoryId)
                             },
-                            onReject  = { viewModel.reject(item.id) }
+                            onReject      = { viewModel.reject(item.id) }
                         )
                     }
                 }
@@ -462,14 +467,18 @@ private fun AppIcon(drawable: android.graphics.drawable.Drawable?, modifier: Mod
 @Composable
 private fun PendingNotificationItem(
     item: PendingNotificationEntity,
-    onApprove: (amount: Long, type: String, date: Date, description: String) -> Unit,
+    categories: List<CategoryEntity>,
+    onAddCategory: (name: String, color: String) -> Unit,
+    onApprove: (amount: Long, type: String, date: Date, description: String, categoryId: Long?) -> Unit,
     onReject: () -> Unit
 ) {
-    var selectedType by remember(item.id) { mutableStateOf(item.parsedType ?: "expense") }
-    var amountText   by remember(item.id) { mutableStateOf(item.parsedAmount?.toString() ?: "") }
-    var selectedDate by remember(item.id) { mutableStateOf(item.parsedDate ?: Date()) }
-    var description  by remember(item.id) { mutableStateOf(item.parsedDescription ?: "") }
-    var showDatePicker by remember { mutableStateOf(false) }
+    var selectedType       by remember(item.id) { mutableStateOf(item.parsedType ?: "expense") }
+    var amountText         by remember(item.id) { mutableStateOf(item.parsedAmount?.toString() ?: "") }
+    var selectedDate       by remember(item.id) { mutableStateOf(item.parsedDate ?: Date()) }
+    var description        by remember(item.id) { mutableStateOf(item.parsedDescription ?: "") }
+    var selectedCategoryId by remember(item.id) { mutableStateOf<Long?>(null) }
+    var showDatePicker     by remember { mutableStateOf(false) }
+    var showCategoryDialog by remember { mutableStateOf(false) }
 
     val datePickerState = rememberDatePickerState(initialSelectedDateMillis = selectedDate.time)
     val dateFmt  = remember { SimpleDateFormat("yyyy.MM.dd", Locale.KOREAN) }
@@ -588,6 +597,20 @@ private fun PendingNotificationItem(
 
             Spacer(Modifier.height(8.dp))
 
+            // 구분(카테고리) 선택
+            val selectedCategory = categories.find { it.id == selectedCategoryId }
+            OutlinedButton(
+                onClick  = { showCategoryDialog = true },
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Text(
+                    text = if (selectedCategory != null) "구분: ${selectedCategory.name}"
+                    else "구분 선택 (선택사항)"
+                )
+            }
+
+            Spacer(Modifier.height(8.dp))
+
             // 취소 / 저장 버튼
             Row(
                 modifier              = Modifier.fillMaxWidth(),
@@ -601,13 +624,27 @@ private fun PendingNotificationItem(
                 Button(
                     onClick  = {
                         val amt = amountText.toLongOrNull() ?: return@Button
-                        onApprove(amt, selectedType, selectedDate, description)
+                        onApprove(amt, selectedType, selectedDate, description, selectedCategoryId)
                     },
                     enabled  = isAmountValid,
                     modifier = Modifier.weight(1f)
                 ) { Text("저장") }
             }
         }
+    }
+
+    // 카테고리 선택 다이얼로그
+    if (showCategoryDialog) {
+        CategoryDialog(
+            categories         = categories,
+            selectedCategoryId = selectedCategoryId ?: -1L,
+            onSelectCategory   = { cat ->
+                selectedCategoryId = cat.id
+                showCategoryDialog = false
+            },
+            onAddCategory      = onAddCategory,
+            onDismiss          = { showCategoryDialog = false }
+        )
     }
 
     // DatePicker 다이얼로그

@@ -170,7 +170,7 @@ fun CategoryDialog(
                 ) {
                     Icon(Icons.Filled.Add, contentDescription = null)
                     Spacer(modifier = Modifier.width(4.dp))
-                    Text("+ 새 구분 추가")
+                    Text("새 구분 추가")
                 }
             }
 
