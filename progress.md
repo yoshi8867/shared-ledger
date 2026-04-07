@@ -2,7 +2,7 @@
 
 **작성일:** 2026-04-05  
 **최종 업데이트:** 2026-04-07  
-**현재 Phase:** Phase 5 구현 완료 (Push 알림 + SMS 자동입력) → 사용자 테스트 대기
+**현재 Phase:** Phase 5 버그 수정 완료 → 사용자 테스트 완료 ✅
 
 ---
 
@@ -271,7 +271,7 @@
 #### 1️⃣ DB / 파서 / 서비스 레이어 ✅
 - [x] `PendingNotificationEntity` + `PendingNotificationDao` (dedup_hash UNIQUE)
 - [x] AppDatabase version 4
-- [x] 파서 5종: KBBankParser / HanaCardParser / ShinhanCardParser / KakaoPayParser / TossParser
+- [x] 파서 6종: KBBankParser / KakaoBankParser / HanaCardParser / ShinhanCardParser / KakaoPayParser / TossParser
 - [x] `GenericKoreanFinanceParser` — 미등록 앱/SMS 폴백
 - [x] `NotificationParserRegistry` — 파서 라우팅 + 표시명 변환
 - [x] `AppNotificationListenerService` — 알림 수신 → 파싱 → DB 저장
@@ -282,7 +282,7 @@
 #### 2️⃣ AutoFillScreen (Push + SMS 통합) ✅
 - [x] `AutoFillViewModel` — selectedSource / pushItems / smsItems / enabledPackages
 - [x] `AutoFillScreen` — 소스 토글 + LazyColumn + 권한 경고 배너
-- [x] `PendingNotificationItem` — 원본 텍스트(작은 글씨) + 수입/지출 + 금액 + 날짜 + 내용 + [저장/취소]
+- [x] `PendingNotificationItem` — 수입/지출 + 금액 + 날짜·시각(2:1 Row) + 내용 + 원본 알림 텍스트 + 구분(카테고리) + [저장/취소]
 - [x] `PackageSelectionDialog` — 수집 앱 체크박스 모달 (우상단 아이콘)
 - [x] 알림 접근 권한 미설정 시 경고 배너 + 설정 이동
 - [x] SMS READ_SMS 런타임 권한 요청
@@ -294,7 +294,16 @@
 - [x] Routes.AutoFill + AppNavigation 연결
 - [x] AndroidManifest — AppNotificationListenerService 등록
 
-- [ ] **테스트:** 실기기 알림 수신 → AutoFillScreen 목록 → 저장 후 거래 반영 ⏳ (사용자 테스트 필요)
+- [x] **테스트:** 실기기 알림 수신 → AutoFillScreen 목록 → 저장 후 거래 반영 ✅
+
+#### 4️⃣ Phase 5 버그 수정 ✅
+- [x] AutoFillScreen 카테고리 선택 불가 → `CategoryDialog` 연결 + `AutoFillViewModel`에 카테고리 기능 추가
+- [x] 알림 수신 불가 (enabledPackagesCache 타이밍) → DataStore 직접 읽기로 보완
+- [x] 금액 패턴 체크를 body → title+body 전체로 확장
+- [x] com.android.systemui 알림 차단
+- [x] KakaoBankParser 신규 추가 (입금/출금 방향에 따라 → 기준 description 추출)
+- [x] KBBankParser description 추출 개선 (계좌번호~거래유형 키워드 사이 텍스트)
+- [x] HanaCardParser에 하나페이(com.hanaskcard.paycla) 추가 (/ 기준 왼쪽 추출)
 
 ---
 
