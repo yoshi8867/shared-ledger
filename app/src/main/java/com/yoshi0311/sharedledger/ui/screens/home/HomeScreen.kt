@@ -17,10 +17,13 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.CalendarMonth
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.List
+import androidx.compose.material.icons.filled.MarkEmailUnread
 import androidx.compose.material.icons.filled.People
 import androidx.compose.material.icons.filled.PieChart
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Sync
+import androidx.compose.material3.Badge
+import androidx.compose.material3.BadgedBox
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
@@ -69,14 +72,16 @@ fun HomeScreen(
     onNavigateToTransactionEdit: (id: Long, dateMillis: Long) -> Unit = { _, _ -> },
     onNavigateToSharedLedger: (ledgerId: Long) -> Unit = {},
     onNavigateToSettings: () -> Unit = {},
+    onNavigateToAutoFill: () -> Unit = {},
     viewModel: HomeViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val selectedMonth by viewModel.selectedMonth.collectAsStateWithLifecycle()
     val selectedTab by viewModel.selectedTab.collectAsStateWithLifecycle()
     val selectedCalendarDay by viewModel.selectedCalendarDay.collectAsStateWithLifecycle()
-    val syncState by viewModel.syncState.collectAsStateWithLifecycle()
-    val ledgers   by viewModel.ledgers.collectAsStateWithLifecycle()
+    val syncState    by viewModel.syncState.collectAsStateWithLifecycle()
+    val ledgers      by viewModel.ledgers.collectAsStateWithLifecycle()
+    val pendingCount by viewModel.pendingCount.collectAsStateWithLifecycle()
 
     val snackbarHostState = remember { SnackbarHostState() }
     val sheetState = rememberModalBottomSheetState()
@@ -143,6 +148,27 @@ fun HomeScreen(
                     }
                 },
                 actions = {
+                    // 자동입력 배지 아이콘
+                    IconButton(onClick = onNavigateToAutoFill) {
+                        BadgedBox(
+                            badge = {
+                                if (pendingCount > 0) {
+                                    Badge(containerColor = MaterialTheme.colorScheme.tertiary) {
+                                        Text(
+                                            text  = if (pendingCount > 9) "9+" else "$pendingCount",
+                                            style = MaterialTheme.typography.labelSmall,
+                                            color = MaterialTheme.colorScheme.onTertiary
+                                        )
+                                    }
+                                }
+                            }
+                        ) {
+                            Icon(
+                                imageVector  = Icons.Filled.MarkEmailUnread,
+                                contentDescription = "자동 입력"
+                            )
+                        }
+                    }
                     // 설정 버튼
                     IconButton(onClick = onNavigateToSettings) {
                         Icon(imageVector = Icons.Filled.Settings, contentDescription = "설정")

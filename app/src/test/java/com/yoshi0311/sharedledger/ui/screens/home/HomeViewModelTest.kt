@@ -2,6 +2,7 @@ package com.yoshi0311.sharedledger.ui.screens.home
 
 import app.cash.turbine.test
 import com.yoshi0311.sharedledger.data.repository.AuthRepository
+import com.yoshi0311.sharedledger.data.repository.AutoFillRepository
 import com.yoshi0311.sharedledger.data.repository.CategoryRepository
 import com.yoshi0311.sharedledger.data.repository.SharedRepository
 import com.yoshi0311.sharedledger.data.repository.SyncRepository
@@ -33,6 +34,7 @@ class HomeViewModelTest {
     private val authRepo: AuthRepository = mockk(relaxed = true)
     private val syncRepo: SyncRepository = mockk(relaxed = true)
     private val sharedRepo: SharedRepository = mockk(relaxed = true)
+    private val autoFillRepo: AutoFillRepository = mockk(relaxed = true)
 
     private lateinit var viewModel: HomeViewModel
 
@@ -44,8 +46,9 @@ class HomeViewModelTest {
         every { categoryRepo.getByLedgerId(any()) } returns flowOf(emptyList())
         every { transactionRepo.getTotalIncomeByMonth(any(), any()) } returns flowOf(0L)
         every { transactionRepo.getTotalExpenseByMonth(any(), any()) } returns flowOf(0L)
+        every { autoFillRepo.getPendingCount() } returns flowOf(0)
 
-        viewModel = HomeViewModel(transactionRepo, categoryRepo, authRepo, syncRepo, sharedRepo)
+        viewModel = HomeViewModel(transactionRepo, categoryRepo, authRepo, syncRepo, sharedRepo, autoFillRepo)
     }
 
     // ── 월 탐색 ────────────────────────────────────────────────────────────────

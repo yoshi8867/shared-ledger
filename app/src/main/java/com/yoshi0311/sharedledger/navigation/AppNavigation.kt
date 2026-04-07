@@ -8,6 +8,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.yoshi0311.sharedledger.ui.screens.auth.SignupScreen
+import com.yoshi0311.sharedledger.ui.screens.autofill.AutoFillScreen
 import com.yoshi0311.sharedledger.ui.screens.category.CategoryManageScreen
 import com.yoshi0311.sharedledger.ui.screens.home.HomeScreen
 import com.yoshi0311.sharedledger.ui.screens.login.LoginScreen
@@ -73,8 +74,15 @@ fun AppNavigation(
                 },
                 onNavigateToSettings = {
                     navController.navigate(Routes.Settings.route)
+                },
+                onNavigateToAutoFill = {
+                    navController.navigate(Routes.AutoFill.route)
                 }
             )
+        }
+
+        composable(Routes.AutoFill.route) {
+            AutoFillScreen(onNavigateBack = { navController.popBackStack() })
         }
 
         composable(

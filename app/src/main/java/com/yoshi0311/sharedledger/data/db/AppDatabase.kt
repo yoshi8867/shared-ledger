@@ -6,23 +6,27 @@ import androidx.room.Room
 import androidx.room.RoomDatabase
 import androidx.room.TypeConverters
 import com.yoshi0311.sharedledger.data.db.converter.DateConverter
-import com.yoshi0311.sharedledger.data.db.dao.TransactionDao
 import com.yoshi0311.sharedledger.data.db.dao.CategoryDao
-import com.yoshi0311.sharedledger.data.db.entity.TransactionEntity
+import com.yoshi0311.sharedledger.data.db.dao.PendingNotificationDao
+import com.yoshi0311.sharedledger.data.db.dao.TransactionDao
 import com.yoshi0311.sharedledger.data.db.entity.CategoryEntity
+import com.yoshi0311.sharedledger.data.db.entity.PendingNotificationEntity
+import com.yoshi0311.sharedledger.data.db.entity.TransactionEntity
 
 @Database(
     entities = [
         TransactionEntity::class,
-        CategoryEntity::class
+        CategoryEntity::class,
+        PendingNotificationEntity::class
     ],
-    version = 3,
+    version = 4,
     exportSchema = false
 )
 @TypeConverters(DateConverter::class)
 abstract class AppDatabase : RoomDatabase() {
     abstract fun transactionDao(): TransactionDao
     abstract fun categoryDao(): CategoryDao
+    abstract fun pendingNotificationDao(): PendingNotificationDao
 
     companion object {
         @Volatile

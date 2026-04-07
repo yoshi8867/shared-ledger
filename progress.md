@@ -2,7 +2,7 @@
 
 **작성일:** 2026-04-05  
 **최종 업데이트:** 2026-04-07  
-**현재 Phase:** Phase 8-C 완료 (유닛 테스트 + ProGuard + 릴리즈 빌드)
+**현재 Phase:** Phase 5 구현 완료 (Push 알림 + SMS 자동입력) → 사용자 테스트 대기
 
 ---
 
@@ -266,39 +266,35 @@
 
 ---
 
-### Phase 5 — Push 알림 / SMS 자동입력 ⏳
+### Phase 5 — Push 알림 / SMS 자동입력 ✅
 
-#### 1️⃣ NotificationListenerService 구현 ⏳
-- [ ] service/notification/NotificationListenerService.kt
-- [ ] AndroidManifest에 권한 및 서비스 등록
-- [ ] 지정된 앱의 알림 수신 → 금액/내용 파싱
-- [ ] 파싱 결과를 Room DB에 pending 상태로 저장
-- [ ] **테스트:** 수집 앱 알림 수신 → pending 항목 생성 확인
+#### 1️⃣ DB / 파서 / 서비스 레이어 ✅
+- [x] `PendingNotificationEntity` + `PendingNotificationDao` (dedup_hash UNIQUE)
+- [x] AppDatabase version 4
+- [x] 파서 5종: KBBankParser / HanaCardParser / ShinhanCardParser / KakaoPayParser / TossParser
+- [x] `GenericKoreanFinanceParser` — 미등록 앱/SMS 폴백
+- [x] `NotificationParserRegistry` — 파서 라우팅 + 표시명 변환
+- [x] `AppNotificationListenerService` — 알림 수신 → 파싱 → DB 저장
+- [x] `SmsReader` — content://sms/inbox 조회 (최근 30일, 금액 패턴 필터)
+- [x] `AutoFillRepository` — insertPush / loadSmsItems / approve / reject
+- [x] 중복 처리: push=5분 버킷 MD5, sms=SMS _id MD5
 
----
+#### 2️⃣ AutoFillScreen (Push + SMS 통합) ✅
+- [x] `AutoFillViewModel` — selectedSource / pushItems / smsItems / enabledPackages
+- [x] `AutoFillScreen` — 소스 토글 + LazyColumn + 권한 경고 배너
+- [x] `PendingNotificationItem` — 원본 텍스트(작은 글씨) + 수입/지출 + 금액 + 날짜 + 내용 + [저장/취소]
+- [x] `PackageSelectionDialog` — 수집 앱 체크박스 모달 (우상단 아이콘)
+- [x] 알림 접근 권한 미설정 시 경고 배너 + 설정 이동
+- [x] SMS READ_SMS 런타임 권한 요청
 
-#### 2️⃣ AutoFillPushScreen 구현 ⏳
-- [ ] ui/screens/autofill/AutoFillPushScreen.kt
-- [ ] 수집 대상 앱 선택/해제 목록
-- [ ] pending 거래 목록 표시 (ui/components/PendingTransactionItem.kt)
-- [ ] 승인(→ confirmed) / 거절(→ soft delete) 액션
-- [ ] **테스트:** 승인 후 HomeScreen 거래 목록 반영 확인
+#### 3️⃣ HomeScreen 배지 + 연결 ✅
+- [x] HomeScreen 우상단 `MarkEmailUnread` 아이콘 + BadgedBox (tertiary 색상)
+- [x] `HomeViewModel` pendingCount StateFlow 추가
+- [x] `AuthDataStore` + `AuthRepository` — enabledPackages 관리
+- [x] Routes.AutoFill + AppNavigation 연결
+- [x] AndroidManifest — AppNotificationListenerService 등록
 
----
-
-#### 3️⃣ SMSParser 구현 ⏳
-- [ ] service/sms/SMSParser.kt — 카드사/은행 SMS 패턴 파싱
-- [ ] util/SMSParser.kt — 금액, 사용처, 날짜 추출 정규식
-- [ ] READ_SMS 권한 처리 (런타임 권한 요청)
-
----
-
-#### 4️⃣ AutoFillSMSScreen 구현 ⏳
-- [ ] ui/screens/autofill/AutoFillSMSScreen.kt
-- [ ] 기간 선택 (최근 N일 / 절대 날짜 범위)
-- [ ] SMS 파싱 후 pending 거래 목록 표시
-- [ ] 승인/거절 액션
-- [ ] **테스트:** SMS 파싱 결과 정확도 및 승인 흐름 확인
+- [ ] **테스트:** 실기기 알림 수신 → AutoFillScreen 목록 → 저장 후 거래 반영 ⏳ (사용자 테스트 필요)
 
 ---
 

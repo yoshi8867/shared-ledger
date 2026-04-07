@@ -5,6 +5,7 @@ import androidx.lifecycle.viewModelScope
 import com.yoshi0311.sharedledger.data.db.entity.CategoryEntity
 import com.yoshi0311.sharedledger.data.db.entity.TransactionEntity
 import com.yoshi0311.sharedledger.data.repository.AuthRepository
+import com.yoshi0311.sharedledger.data.repository.AutoFillRepository
 import com.yoshi0311.sharedledger.data.repository.CategoryRepository
 import com.yoshi0311.sharedledger.data.repository.SharedRepository
 import com.yoshi0311.sharedledger.data.repository.SyncRepository
@@ -57,8 +58,12 @@ class HomeViewModel @Inject constructor(
     private val categoryRepo: CategoryRepository,
     private val authRepo: AuthRepository,
     private val syncRepo: SyncRepository,
-    private val sharedRepo: SharedRepository
+    private val sharedRepo: SharedRepository,
+    private val autoFillRepo: AutoFillRepository
 ) : ViewModel() {
+
+    val pendingCount: StateFlow<Int> = autoFillRepo.getPendingCount()
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), 0)
 
     // 활성 장부 ID: activeLedgerId 없으면 ledgerId 폴백
     val currentLedgerId: StateFlow<Long> = authRepo.activeLedgerId

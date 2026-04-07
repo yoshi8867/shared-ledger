@@ -19,4 +19,5 @@ sealed class Routes(val route: String) {
 
     object Settings : Routes("settings")
     object CategoryManage : Routes("category_manage")
+    object AutoFill : Routes("auto_fill")
 }

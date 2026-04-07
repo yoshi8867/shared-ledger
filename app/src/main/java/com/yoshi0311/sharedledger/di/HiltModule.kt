@@ -3,6 +3,7 @@ package com.yoshi0311.sharedledger.di
 import android.content.Context
 import com.yoshi0311.sharedledger.data.db.AppDatabase
 import com.yoshi0311.sharedledger.data.db.dao.CategoryDao
+import com.yoshi0311.sharedledger.data.db.dao.PendingNotificationDao
 import com.yoshi0311.sharedledger.data.db.dao.TransactionDao
 import com.yoshi0311.sharedledger.data.repository.CategoryRepository
 import com.yoshi0311.sharedledger.data.repository.TransactionRepository
@@ -29,6 +30,10 @@ object HiltModule {
     @Provides
     fun provideCategoryDao(db: AppDatabase): CategoryDao =
         db.categoryDao()
+
+    @Provides
+    fun providePendingNotificationDao(db: AppDatabase): PendingNotificationDao =
+        db.pendingNotificationDao()
 
     @Provides
     @Singleton
