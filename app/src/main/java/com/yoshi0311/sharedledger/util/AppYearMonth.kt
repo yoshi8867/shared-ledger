@@ -8,6 +8,8 @@ data class AppYearMonth(val year: Int, val month: Int) {
 
     fun displayLabel(): String = "${year}년 ${month}월"
 
+    fun shortDisplayLabel(): String = "${year % 100}년 ${month}월"
+
     fun next(): AppYearMonth = if (month == 12) AppYearMonth(year + 1, 1)
     else AppYearMonth(year, month + 1)
 

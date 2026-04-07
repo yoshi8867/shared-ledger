@@ -130,22 +130,14 @@ fun HomeScreen(
         topBar = {
             TopAppBar(
                 title = {
-                    Column(
+                    Text(
+                        text = activeLedgerName,
+                        style = MaterialTheme.typography.titleMedium,
                         modifier = Modifier.clickable {
                             viewModel.loadLedgers()
                             scope.launch { showLedgerSheet = true }
                         }
-                    ) {
-                        Text(
-                            text = activeLedgerName,
-                            style = MaterialTheme.typography.titleMedium
-                        )
-                        Text(
-                            text = selectedMonth.displayLabel(),
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
+                    )
                 },
                 actions = {
                     // 자동입력 배지 아이콘
@@ -215,16 +207,21 @@ fun HomeScreen(
                 .fillMaxSize()
                 .padding(innerPadding)
         ) {
-            MonthSelectorBar(
-                currentMonth = selectedMonth,
-                onPrev = { viewModel.prevMonth() },
-                onNext = { viewModel.nextMonth() }
-            )
-
-            SummaryCard(
-                totalIncome = uiState.totalIncome,
-                totalExpense = uiState.totalExpense
-            )
+            Row(
+                modifier = Modifier.fillMaxWidth().padding(end = 8.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                MonthSelectorBar(
+                    currentMonth = selectedMonth,
+                    onPrev = { viewModel.prevMonth() },
+                    onNext = { viewModel.nextMonth() }
+                )
+                SummaryCard(
+                    totalIncome = uiState.totalIncome,
+                    totalExpense = uiState.totalExpense,
+                    modifier = Modifier.weight(1f)
+                )
+            }
 
             TabRow(selectedTabIndex = selectedTab) {
                 tabs.forEachIndexed { index, title ->
@@ -323,42 +320,40 @@ fun HomeScreen(
 }
 
 @Composable
-private fun SummaryCard(totalIncome: Long, totalExpense: Long) {
+private fun SummaryCard(totalIncome: Long, totalExpense: Long, modifier: Modifier = Modifier) {
     val fmt = NumberFormat.getNumberInstance(Locale.KOREA)
     Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 12.dp, vertical = 4.dp),
+        modifier = modifier.padding(vertical = 4.dp, horizontal = 4.dp),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
     ) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 16.dp, vertical = 10.dp),
+                .padding(horizontal = 8.dp, vertical = 6.dp),
             horizontalArrangement = Arrangement.SpaceEvenly
         ) {
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                Text("수입", style = MaterialTheme.typography.labelMedium)
+                Text("수입", style = MaterialTheme.typography.labelSmall)
                 Text(
                     text = "+${fmt.format(totalIncome)}원",
-                    style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold),
+                    style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
                     color = Color(0xFFF44336)
                 )
             }
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                Text("지출", style = MaterialTheme.typography.labelMedium)
+                Text("지출", style = MaterialTheme.typography.labelSmall)
                 Text(
                     text = "-${fmt.format(totalExpense)}원",
-                    style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold),
+                    style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
                     color = Color(0xFF2196F3)
                 )
             }
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                Text("잔액", style = MaterialTheme.typography.labelMedium)
+                Text("잔액", style = MaterialTheme.typography.labelSmall)
                 val balance = totalIncome - totalExpense
                 Text(
                     text = "${if (balance >= 0) "+" else ""}${fmt.format(balance)}원",
-                    style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold),
+                    style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
                     color = if (balance >= 0) Color(0xFFF44336) else Color(0xFF2196F3)
                 )
             }

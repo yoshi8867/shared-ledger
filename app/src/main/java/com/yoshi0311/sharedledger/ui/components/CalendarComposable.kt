@@ -1,7 +1,6 @@
 package com.yoshi0311.sharedledger.ui.components
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -19,6 +18,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -136,7 +137,13 @@ private fun DayCell(
     Box(
         modifier = modifier
             .height(CELL_HEIGHT_DP.dp)
-            .border(0.5.dp, cellBorderColor)
+            .drawBehind {
+                val stroke = 0.5.dp.toPx()
+                drawLine(cellBorderColor, Offset(0f, 0f), Offset(size.width, 0f), stroke)
+                drawLine(cellBorderColor, Offset(0f, 0f), Offset(0f, size.height), stroke)
+                drawLine(cellBorderColor, Offset(size.width, 0f), Offset(size.width, size.height), stroke)
+                drawLine(cellBorderColor, Offset(0f, size.height), Offset(size.width, size.height), stroke)
+            }
             .then(if (isSelected) Modifier.background(selectedBg) else Modifier)
             .clickable(onClick = onClick)
     ) {
