@@ -30,6 +30,7 @@ class AuthRepository @Inject constructor(
     val syncInterval:         Flow<String>  = authDataStore.syncInterval
     val notificationsEnabled: Flow<Boolean> = authDataStore.notificationsEnabled
     val enabledPackages:      Flow<Set<String>> = authDataStore.enabledPackages
+    val lastLoginMethod:      Flow<String?> = authDataStore.lastLoginMethod
 
     suspend fun setActiveLedgerId(id: Long) = authDataStore.setActiveLedgerId(id)
 
@@ -41,12 +42,14 @@ class AuthRepository @Inject constructor(
     suspend fun login(email: String, password: String): AuthResult = runCatching {
         val res = api.login(LoginRequest(email, password))
         authDataStore.saveTokens(res.accessToken, res.refreshToken, res.ledgerId)
+        authDataStore.saveLastLoginMethod("email")
         AuthResult.Success
     }.getOrElse { e -> AuthResult.Error(e.toDisplayMessage()) }
 
     suspend fun loginWithGoogle(idToken: String): AuthResult = runCatching {
         val res = api.loginWithGoogle(GoogleLoginRequest(idToken))
         authDataStore.saveTokens(res.accessToken, res.refreshToken, res.ledgerId)
+        authDataStore.saveLastLoginMethod("google")
         AuthResult.Success
     }.getOrElse { e -> AuthResult.Error(e.toDisplayMessage()) }
 

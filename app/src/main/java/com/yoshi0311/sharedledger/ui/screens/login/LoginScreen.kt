@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -63,6 +64,7 @@ fun LoginScreen(
     var showSkipDialog by remember { mutableStateOf(false) }
 
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    val lastLoginMethod by viewModel.lastLoginMethod.collectAsStateWithLifecycle()
     val snackbarHostState = remember { SnackbarHostState() }
 
     LaunchedEffect(uiState.error) {
@@ -170,6 +172,14 @@ fun LoginScreen(
                     )
                 } else {
                     Text("로그인", style = MaterialTheme.typography.labelLarge)
+                    if (lastLoginMethod == "email") {
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text(
+                            text = "최근 사용",
+                            style = MaterialTheme.typography.labelSmall,
+                            color = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.7f)
+                        )
+                    }
                 }
             }
 
@@ -197,6 +207,14 @@ fun LoginScreen(
                     text = "Google로 로그인",
                     style = MaterialTheme.typography.labelLarge
                 )
+                if (lastLoginMethod == "google") {
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(
+                        text = "최근 사용",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.5f)
+                    )
+                }
             }
 
             Spacer(modifier = Modifier.height(12.dp))

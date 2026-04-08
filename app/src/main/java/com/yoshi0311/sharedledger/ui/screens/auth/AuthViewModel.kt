@@ -8,8 +8,10 @@ import com.yoshi0311.sharedledger.data.repository.AuthRepository
 import com.yoshi0311.sharedledger.data.repository.AuthResult
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -26,6 +28,9 @@ class AuthViewModel @Inject constructor(
 
     private val _uiState = MutableStateFlow(AuthUiState())
     val uiState: StateFlow<AuthUiState> = _uiState.asStateFlow()
+
+    val lastLoginMethod: StateFlow<String?> = authRepository.lastLoginMethod
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), null)
 
     fun loginWithGoogle(context: Context) {
         viewModelScope.launch {

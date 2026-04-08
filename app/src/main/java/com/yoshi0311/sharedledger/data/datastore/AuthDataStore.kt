@@ -29,6 +29,7 @@ class AuthDataStore @Inject constructor(@ApplicationContext private val context:
     private val SYNC_INTERVAL         = stringPreferencesKey("sync_interval")
     private val NOTIFICATIONS_ENABLED = booleanPreferencesKey("notifications_enabled")
     private val ENABLED_PACKAGES      = stringPreferencesKey("enabled_packages")
+    private val LAST_LOGIN_METHOD     = stringPreferencesKey("last_login_method")
 
     val accessToken:         Flow<String?> = context.dataStore.data.map { it[ACCESS_TOKEN] }
     val refreshToken:        Flow<String?> = context.dataStore.data.map { it[REFRESH_TOKEN] }
@@ -38,6 +39,7 @@ class AuthDataStore @Inject constructor(@ApplicationContext private val context:
     val serverUrl:           Flow<String>  = context.dataStore.data.map { it[SERVER_URL] ?: ServerUrlProvider.DEFAULT_URL }
     val syncInterval:        Flow<String>  = context.dataStore.data.map { it[SYNC_INTERVAL] ?: "manual" }
     val notificationsEnabled: Flow<Boolean> = context.dataStore.data.map { it[NOTIFICATIONS_ENABLED] ?: true }
+    val lastLoginMethod:     Flow<String?> = context.dataStore.data.map { it[LAST_LOGIN_METHOD] }
     val enabledPackages: Flow<Set<String>> = context.dataStore.data.map { prefs ->
         prefs[ENABLED_PACKAGES]
             ?.split(",")
@@ -67,6 +69,10 @@ class AuthDataStore @Inject constructor(@ApplicationContext private val context:
 
     suspend fun saveServerUrl(url: String) {
         context.dataStore.edit { it[SERVER_URL] = url }
+    }
+
+    suspend fun saveLastLoginMethod(method: String) {
+        context.dataStore.edit { it[LAST_LOGIN_METHOD] = method }
     }
 
     suspend fun clearTokens() {
