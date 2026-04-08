@@ -1,8 +1,8 @@
 # Shared Ledger App - 개발 진행도
 
 **작성일:** 2026-04-05  
-**최종 업데이트:** 2026-04-07  
-**현재 Phase:** Phase 5 버그 수정 완료 → 사용자 테스트 완료 ✅
+**최종 업데이트:** 2026-04-08  
+**현재 Phase:** S4 OAuth 완료 (Google ✅ / Naver ✅) + 보안 개선 ✅
 
 ---
 
@@ -13,10 +13,10 @@
 ## 📊 전체 진행도
 
 ### Android 앱
-█████████████████░░░ 90% (Phase 1~8-C 완료, 릴리즈 서명·배포 준비 중)
+██████████████████░░ 92% (Phase 1~8-C + OAuth 완료, 릴리즈 서명·배포 준비 중)
 
 ### 백엔드 서버 (Node.js)
-███████████████████░ 95% (S1~S8 완료, S4 미시작)
+████████████████████ 100% (S1~S8 + S4 OAuth 완료)
 
 ---
 
@@ -158,18 +158,33 @@
 
 ---
 
-#### 5️⃣ Google OAuth 구현 ⏳ (OAuth 키 발급 후 진행 예정)
+#### 5️⃣ Google OAuth 구현 ✅
+- [x] `auth/GoogleSignInHelper.kt` — Credential Manager로 ID 토큰 획득
+- [x] `AuthApi.kt` — `POST /api/auth/oauth/google` 엔드포인트 추가
+- [x] `AuthRepository.kt` — loginWithGoogle + lastLoginMethod("google") 저장
+- [x] `AuthViewModel.kt` — loginWithGoogle(context) 추가
+- [x] `LoginScreen.kt` — Google 버튼 활성화 + "최근 사용" 배지
+- [x] OAuth 인증키 BuildConfig로 이전 (local.properties 기반, GitHub 미노출)
+- [x] **테스트:** Google 로그인 → HomeScreen 이동 확인 ✅
 
 ---
 
-#### 6️⃣ Naver OAuth 구현 ⏳ (OAuth 키 발급 후 진행 예정)
+#### 6️⃣ Naver OAuth 구현 ✅
+- [x] `auth/NaverSignInHelper.kt` — Naver Login SDK 5.x로 액세스 토큰 획득
+- [x] `SharedLedgerApp.kt` — 앱 시작 시 Naver SDK 초기화
+- [x] `AuthApi.kt` — `POST /api/auth/oauth/naver` 엔드포인트 추가
+- [x] `AuthRepository.kt` — loginWithNaver + lastLoginMethod("naver") 저장
+- [x] `AuthViewModel.kt` — loginWithNaver(context) 추가
+- [x] `LoginScreen.kt` — 네이버 버튼 활성화 + "최근 사용" 배지
+- [x] OAuth 인증키 BuildConfig로 이전 (local.properties 기반, GitHub 미노출)
+- [x] **테스트:** 네이버 로그인 → HomeScreen 이동 확인 ✅
 
 ---
 
 #### 7️⃣ 토큰 갱신 및 AuthInterceptor ✅
 - [x] network/interceptor/AuthInterceptor.kt — 모든 요청에 Authorization 헤더 자동 추가
-- [x] di/NetworkModule.kt — Retrofit/OkHttp Hilt 제공 (BASE_URL: 10.0.2.2:3000)
-- [x] network/api/AuthApi.kt — Retrofit 인터페이스 (signup/login/refresh)
+- [x] di/NetworkModule.kt — Retrofit/OkHttp Hilt 제공 (BASE_URL: Render HTTPS)
+- [x] network/api/AuthApi.kt — Retrofit 인터페이스 (signup/login/refresh/oauth)
 - [ ] 토큰 만료 시 자동 재시도 (Phase 6에서 구현 예정)
 
 ---
@@ -489,11 +504,14 @@
 
 ---
 
-### S4️⃣ 인증 API (OAuth) ⏳ (OAuth 키 발급 후 진행 예정)
-- [ ] `POST /api/auth/google` - Google OAuth 토큰 검증 + JWT 발급
-- [ ] `POST /api/auth/naver` - Naver OAuth 토큰 검증 + JWT 발급
-- [ ] OAuth 신규/기존 유저 분기 처리 (upsert)
-- **테스트:** Google/Naver 토큰으로 로그인 및 JWT 수신 확인
+### S4️⃣ 인증 API (OAuth) ✅
+- [x] `POST /api/auth/oauth/google` — google-auth-library로 ID 토큰 검증 + upsert + JWT 발급
+- [x] `POST /api/auth/oauth/naver` — Naver 프로필 API 호출 + 고유 ID 기반 upsert + JWT 발급
+- [x] 네이버: `id` 필드로 가상 이메일 생성 (`naver_{id}@oauth.local`) — email 컬럼 UNIQUE 제약 충족
+- [x] 신규/기존 유저 분기 처리 (ON CONFLICT DO UPDATE upsert)
+- [x] 로그인 성공 시 기본 장부 자동 생성 (없는 경우)
+- [x] render.yaml에 GOOGLE_CLIENT_ID / NAVER_CLIENT_ID / NAVER_CLIENT_SECRET 항목 추가
+- [x] **테스트:** Google/Naver 로그인 → HomeScreen 이동 확인 ✅
 
 ---
 
@@ -556,14 +574,14 @@
 **2026-04-06** | Android Phase 8-B 완료 (CategoryManageScreen 구현 — 구분 CRUD + 색상 선택기)
 **2026-04-06** | 백엔드 S8 완료 (Render.com 배포 — https://shared-ledger-api.onrender.com)
 **2026-04-07** | Android Phase 8-C 완료 (유닛 테스트 전체 — MockK+Turbine ViewModel 13/13, Room DAO in-memory 27개, ProGuard 설정, AAB 릴리즈 빌드 성공)
+**2026-04-08** | S4 + Phase 2-5/6 완료 (Google/Naver OAuth — 서버 upsert + Android Credential Manager/Naver SDK + 마지막 로그인 배지)
+**2026-04-08** | 보안 개선 — OAuth 인증키 BuildConfig 이전 (local.properties 기반, GitHub 미노출)
 
 ---
 
 ## 🎯 다음 단계
 
 **다음 단계:** 
-1. 릴리즈 키스토어 서명 설정 → 서명된 AAB 생성
-2. Google Play Console 앱 등록 (스크린샷, 앱 설명, 개인정보처리방침)
-3. (선택) Phase 5 — Push 알림 / SMS 자동입력
-
-**참고:** Phase 5 (Push 알림 / SMS 자동입력)는 별도 지시 시 진행
+1. 자동 로그인 체크박스 기능 구현 (DataStore auto_login 연동)
+2. 릴리즈 키스토어 서명 설정 → 서명된 AAB 생성
+3. Google Play Console 앱 등록 (스크린샷, 앱 설명, 개인정보처리방침)
