@@ -110,3 +110,13 @@ CREATE INDEX IF NOT EXISTS idx_categories_ledger
 
 CREATE INDEX IF NOT EXISTS idx_shared_ledgers_user
     ON shared_ledgers(shared_with_user_id);
+
+-- ────────────────────────────────────────────────────────────
+-- 8. Invite codes (장부 초대 코드)
+-- ────────────────────────────────────────────────────────────
+ALTER TABLE ledgers ADD COLUMN IF NOT EXISTS invite_code VARCHAR(8) UNIQUE;
+ALTER TABLE ledgers ADD COLUMN IF NOT EXISTS invite_expires_at TIMESTAMPTZ;
+
+CREATE INDEX IF NOT EXISTS idx_ledgers_invite_code
+    ON ledgers(invite_code)
+    WHERE invite_code IS NOT NULL;
