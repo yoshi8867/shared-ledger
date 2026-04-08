@@ -1,3 +1,9 @@
+import java.util.Properties
+
+val localProps = Properties().apply {
+    rootProject.file("local.properties").takeIf { it.exists() }?.inputStream()?.use { load(it) }
+}
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
@@ -21,6 +27,10 @@ android {
         versionName = "1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+
+        buildConfigField("String", "NAVER_CLIENT_ID",     "\"${localProps["naver.client.id"] ?: ""}\"")
+        buildConfigField("String", "NAVER_CLIENT_SECRET", "\"${localProps["naver.client.secret"] ?: ""}\"")
+        buildConfigField("String", "GOOGLE_WEB_CLIENT_ID","\"${localProps["google.web.client.id"] ?: ""}\"")
     }
 
     buildTypes {
@@ -46,6 +56,7 @@ android {
     buildFeatures {
         compose = true
         aidl = true
+        buildConfig = true
     }
 }
 
