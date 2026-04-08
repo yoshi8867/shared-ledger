@@ -22,6 +22,7 @@ lifecycleViewmodelCompose = "2.7.0"
 credentialsManager = "1.3.0"
 googleid = "1.1.1"
 naverOauth = "5.10.0"
+splashscreen = "1.0.1"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -80,6 +81,9 @@ firebase-messaging = { group = "com.google.firebase", name = "firebase-messaging
 credentials = { group = "androidx.credentials", name = "credentials", version.ref = "credentialsManager" }
 credentials-play-services-auth = { group = "androidx.credentials", name = "credentials-play-services-auth", version.ref = "credentialsManager" }
 googleid = { group = "com.google.android.libraries.identity.googleid", name = "googleid", version.ref = "googleid" }
+
+# SplashScreen
+androidx-core-splashscreen = { group = "androidx.core", name = "core-splashscreen", version.ref = "splashscreen" }
 
 # OAuth - Naver Login SDK
 naver-oauth = { group = "com.navercorp.nid", name = "oauth", version.ref = "naverOauth" }

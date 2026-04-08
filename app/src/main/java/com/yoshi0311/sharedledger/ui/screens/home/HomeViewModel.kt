@@ -49,7 +49,9 @@ data class LedgerItem(
     val ledgerName: String,
     val isOwner: Boolean,
     val permission: String = "owner",   // "owner" | "view" | "edit"
-    val sharedLedgerId: Long? = null    // 공유 장부일 때만
+    val sharedLedgerId: Long? = null,   // 공유 장부일 때만
+    val ownerName: String? = null,      // 공유받은 장부의 소유자명
+    val ownerEmail: String? = null      // 공유받은 장부의 소유자 이메일
 )
 
 @HiltViewModel
@@ -80,8 +82,17 @@ class HomeViewModel @Inject constructor(
             val shared = sharedRepo.getSharedLedgers().getOrElse { emptyList() }
             _ledgers.value =
                 own.map { LedgerItem(it.ledgerId, it.ledgerName, isOwner = true) } +
-                shared.map { LedgerItem(it.ledgerId, it.ledgerName, isOwner = false,
-                    permission = it.permission, sharedLedgerId = it.sharedLedgerId) }
+                shared.map {
+                    LedgerItem(
+                        ledgerId = it.ledgerId,
+                        ledgerName = it.ledgerName,
+                        isOwner = false,
+                        permission = it.permission,
+                        sharedLedgerId = it.sharedLedgerId,
+                        ownerName = it.ownerName,
+                        ownerEmail = it.ownerEmail
+                    )
+                }
         }
     }
 

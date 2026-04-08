@@ -1,6 +1,10 @@
 package com.yoshi0311.sharedledger.data.repository
 
+import com.yoshi0311.sharedledger.network.api.InviteCodeResponse
 import com.yoshi0311.sharedledger.network.api.InviteRequest
+import com.yoshi0311.sharedledger.network.api.JoinLedgerRequest
+import com.yoshi0311.sharedledger.network.api.JoinLedgerResponse
+import com.yoshi0311.sharedledger.network.api.LedgerUpdateRequest
 import com.yoshi0311.sharedledger.network.api.OwnLedgerDto
 import com.yoshi0311.sharedledger.network.api.SharedApi
 import com.yoshi0311.sharedledger.network.api.SharedLedgerDto
@@ -34,4 +38,16 @@ class SharedRepository @Inject constructor(
 
     suspend fun searchUser(email: String): Result<UserSearchDto> =
         runCatching { api.searchUser(email).user }
+
+    suspend fun getLedger(ledgerId: Long): Result<OwnLedgerDto> =
+        runCatching { api.getLedger(ledgerId).ledger }
+
+    suspend fun renameLedger(ledgerId: Long, name: String): Result<OwnLedgerDto> =
+        runCatching { api.updateLedger(ledgerId, LedgerUpdateRequest(name)).ledger }
+
+    suspend fun generateInviteCode(ledgerId: Long): Result<InviteCodeResponse> =
+        runCatching { api.generateInviteCode(ledgerId) }
+
+    suspend fun joinLedger(inviteCode: String): Result<JoinLedgerResponse> =
+        runCatching { api.joinLedger(JoinLedgerRequest(inviteCode)) }
 }

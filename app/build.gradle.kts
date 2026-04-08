@@ -111,6 +111,9 @@ dependencies {
     implementation(libs.credentials.play.services.auth)
     implementation(libs.googleid)
 
+    // SplashScreen
+    implementation(libs.androidx.core.splashscreen)
+
     // OAuth - Naver Login SDK
     implementation(libs.naver.oauth)
 

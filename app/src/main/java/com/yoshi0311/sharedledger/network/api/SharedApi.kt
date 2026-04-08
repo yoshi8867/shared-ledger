@@ -6,6 +6,7 @@ import retrofit2.http.DELETE
 import retrofit2.http.GET
 import retrofit2.http.PATCH
 import retrofit2.http.POST
+import retrofit2.http.PUT
 import retrofit2.http.Path
 import retrofit2.http.Query
 
@@ -43,6 +44,10 @@ data class UserSearchDto(
 
 // ── Requests ─────────────────────────────────────────────────────────────────
 
+data class LedgerUpdateRequest(
+    @SerializedName("ledger_name") val ledgerName: String
+)
+
 data class InviteRequest(
     @SerializedName("ledger_id")  val ledgerId: Long,
     @SerializedName("email")      val email: String,
@@ -65,6 +70,24 @@ data class SharedLedgersResponse(
 
 data class OwnLedgersResponse(
     @SerializedName("ledgers") val ledgers: List<OwnLedgerDto>
+)
+
+data class LedgerDetailResponse(
+    @SerializedName("ledger") val ledger: OwnLedgerDto
+)
+
+data class InviteCodeResponse(
+    @SerializedName("invite_code") val inviteCode: String,
+    @SerializedName("expires_at")  val expiresAt: String
+)
+
+data class JoinLedgerRequest(
+    @SerializedName("invite_code") val inviteCode: String
+)
+
+data class JoinLedgerResponse(
+    @SerializedName("ledger_id") val ledgerId: Long,
+    @SerializedName("message")   val message: String
 )
 
 data class UserSearchResponse(
@@ -104,4 +127,20 @@ interface SharedApi {
     /** 이메일로 사용자 검색 */
     @GET("api/users/search")
     suspend fun searchUser(@Query("email") email: String): UserSearchResponse
+
+    /** 장부 단건 조회 */
+    @GET("api/ledgers/{id}")
+    suspend fun getLedger(@Path("id") id: Long): LedgerDetailResponse
+
+    /** 장부 이름 수정 */
+    @PUT("api/ledgers/{id}")
+    suspend fun updateLedger(@Path("id") id: Long, @Body request: LedgerUpdateRequest): LedgerDetailResponse
+
+    /** 초대 코드 생성/갱신 (소유자만) */
+    @POST("api/ledgers/{id}/invite-code")
+    suspend fun generateInviteCode(@Path("id") id: Long): InviteCodeResponse
+
+    /** 초대 코드로 장부 참가 */
+    @POST("api/ledgers/join")
+    suspend fun joinLedger(@Body request: JoinLedgerRequest): JoinLedgerResponse
 }

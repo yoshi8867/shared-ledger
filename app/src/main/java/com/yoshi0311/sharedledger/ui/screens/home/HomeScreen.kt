@@ -1,21 +1,14 @@
 package com.yoshi0311.sharedledger.ui.screens.home
 
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.CalendarMonth
-import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.List
 import androidx.compose.material.icons.filled.MarkEmailUnread
 import androidx.compose.material.icons.filled.People
@@ -29,13 +22,9 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.ListItem
-import androidx.compose.material3.ListItemDefaults
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
@@ -44,15 +33,10 @@ import androidx.compose.material3.TabRow
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
-import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.saveable.rememberSaveable
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -61,7 +45,6 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.yoshi0311.sharedledger.ui.components.MonthSelectorBar
-import kotlinx.coroutines.launch
 import java.text.NumberFormat
 import java.util.Calendar
 import java.util.Locale
@@ -80,19 +63,10 @@ fun HomeScreen(
     val selectedTab by viewModel.selectedTab.collectAsStateWithLifecycle()
     val selectedCalendarDay by viewModel.selectedCalendarDay.collectAsStateWithLifecycle()
     val syncState    by viewModel.syncState.collectAsStateWithLifecycle()
-    val ledgers      by viewModel.ledgers.collectAsStateWithLifecycle()
     val pendingCount by viewModel.pendingCount.collectAsStateWithLifecycle()
 
     val snackbarHostState = remember { SnackbarHostState() }
-    val sheetState = rememberModalBottomSheetState()
-    val scope = rememberCoroutineScope()
-    var showLedgerSheet by rememberSaveable { mutableStateOf(false) }
-
-    // 활성 장부 이름 계산
     val activeLedgerId = viewModel.currentLedgerId.collectAsStateWithLifecycle().value
-    val activeLedgerName = ledgers.find { it.ledgerId == activeLedgerId }?.ledgerName ?: "내 장부"
-
-    LaunchedEffect(Unit) { viewModel.loadLedgers() }
 
     LaunchedEffect(syncState) {
         when (val s = syncState) {
@@ -129,16 +103,7 @@ fun HomeScreen(
         snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = {
             TopAppBar(
-                title = {
-                    Text(
-                        text = activeLedgerName,
-                        style = MaterialTheme.typography.titleMedium,
-                        modifier = Modifier.clickable {
-                            viewModel.loadLedgers()
-                            scope.launch { showLedgerSheet = true }
-                        }
-                    )
-                },
+                title = {},
                 actions = {
                     // 자동입력 배지 아이콘
                     IconButton(onClick = onNavigateToAutoFill) {
@@ -262,61 +227,6 @@ fun HomeScreen(
         }
     }
 
-    // 장부 전환 BottomSheet
-    if (showLedgerSheet) {
-        ModalBottomSheet(
-            onDismissRequest = { showLedgerSheet = false },
-            sheetState = sheetState
-        ) {
-            Column(modifier = Modifier.padding(bottom = 32.dp)) {
-                Text(
-                    "장부 선택",
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold,
-                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp)
-                )
-                HorizontalDivider()
-
-                if (ledgers.isEmpty()) {
-                    Box(
-                        Modifier.fillMaxWidth().height(80.dp),
-                        contentAlignment = Alignment.Center
-                    ) { CircularProgressIndicator() }
-                } else {
-                    LazyColumn {
-                        items(ledgers) { item ->
-                            ListItem(
-                                headlineContent = { Text(item.ledgerName) },
-                                supportingContent = {
-                                    Text(
-                                        if (item.isOwner) "내 장부"
-                                        else "공유됨 (${if (item.permission == "edit") "편집" else "조회"})"
-                                    )
-                                },
-                                trailingContent = {
-                                    if (item.ledgerId == activeLedgerId) {
-                                        Icon(Icons.Filled.Check, contentDescription = null,
-                                            tint = MaterialTheme.colorScheme.primary)
-                                    }
-                                },
-                                colors = if (item.ledgerId == activeLedgerId)
-                                    ListItemDefaults.colors(
-                                        containerColor = MaterialTheme.colorScheme.primaryContainer
-                                    )
-                                else ListItemDefaults.colors(),
-                                modifier = Modifier.clickable {
-                                    viewModel.switchLedger(item.ledgerId)
-                                    scope.launch { sheetState.hide() }.invokeOnCompletion {
-                                        showLedgerSheet = false
-                                    }
-                                }
-                            )
-                        }
-                    }
-                }
-            }
-        }
-    }
 }
 
 @Composable
