@@ -100,6 +100,9 @@ dependencies {
     implementation(libs.credentials.play.services.auth)
     implementation(libs.googleid)
 
+    // OAuth - Naver Login SDK
+    implementation(libs.naver.oauth)
+
     // Testing
     testImplementation(libs.junit)
     testImplementation(libs.mockk)

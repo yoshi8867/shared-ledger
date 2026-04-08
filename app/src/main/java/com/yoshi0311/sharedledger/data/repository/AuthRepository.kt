@@ -4,6 +4,7 @@ import com.yoshi0311.sharedledger.data.datastore.AuthDataStore
 import com.yoshi0311.sharedledger.network.api.AuthApi
 import com.yoshi0311.sharedledger.network.api.GoogleLoginRequest
 import com.yoshi0311.sharedledger.network.api.LoginRequest
+import com.yoshi0311.sharedledger.network.api.NaverLoginRequest
 import com.yoshi0311.sharedledger.network.api.RefreshRequest
 import com.yoshi0311.sharedledger.network.api.SignupRequest
 import kotlinx.coroutines.flow.Flow
@@ -50,6 +51,13 @@ class AuthRepository @Inject constructor(
         val res = api.loginWithGoogle(GoogleLoginRequest(idToken))
         authDataStore.saveTokens(res.accessToken, res.refreshToken, res.ledgerId)
         authDataStore.saveLastLoginMethod("google")
+        AuthResult.Success
+    }.getOrElse { e -> AuthResult.Error(e.toDisplayMessage()) }
+
+    suspend fun loginWithNaver(accessToken: String): AuthResult = runCatching {
+        val res = api.loginWithNaver(NaverLoginRequest(accessToken))
+        authDataStore.saveTokens(res.accessToken, res.refreshToken, res.ledgerId)
+        authDataStore.saveLastLoginMethod("naver")
         AuthResult.Success
     }.getOrElse { e -> AuthResult.Error(e.toDisplayMessage()) }
 

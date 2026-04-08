@@ -220,16 +220,23 @@ fun LoginScreen(
             Spacer(modifier = Modifier.height(12.dp))
 
             OutlinedButton(
-                onClick = { /* TODO: Naver OAuth */ },
+                onClick = { viewModel.loginWithNaver(context) },
                 modifier = Modifier.fillMaxWidth().height(52.dp),
                 border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline),
-                enabled = false
+                enabled = !uiState.isLoading
             ) {
                 Text(
-                    text = "네이버로 로그인 (준비 중)",
-                    style = MaterialTheme.typography.labelLarge,
-                    color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.4f)
+                    text = "네이버로 로그인",
+                    style = MaterialTheme.typography.labelLarge
                 )
+                if (lastLoginMethod == "naver") {
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(
+                        text = "최근 사용",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.5f)
+                    )
+                }
             }
 
             Spacer(modifier = Modifier.height(32.dp))

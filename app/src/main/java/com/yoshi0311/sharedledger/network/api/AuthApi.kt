@@ -23,6 +23,10 @@ data class GoogleLoginRequest(
     @SerializedName("id_token") val idToken: String
 )
 
+data class NaverLoginRequest(
+    @SerializedName("access_token") val accessToken: String
+)
+
 data class AuthResponse(
     @SerializedName("access_token") val accessToken: String,
     @SerializedName("refresh_token") val refreshToken: String,
@@ -41,4 +45,7 @@ interface AuthApi {
 
     @POST("api/auth/oauth/google")
     suspend fun loginWithGoogle(@Body req: GoogleLoginRequest): AuthResponse
+
+    @POST("api/auth/oauth/naver")
+    suspend fun loginWithNaver(@Body req: NaverLoginRequest): AuthResponse
 }

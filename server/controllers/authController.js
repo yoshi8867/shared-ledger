@@ -1,5 +1,6 @@
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
+const https = require('https');
 const { OAuth2Client } = require('google-auth-library');
 const { pool } = require('../db/pool');
 
@@ -240,4 +241,80 @@ async function loginWithGoogle(req, res) {
   }
 }
 
-module.exports = { signup, login, refresh, verify, loginWithGoogle };
+// 네이버 프로필 API 호출
+function getNaverProfile(naverAccessToken) {
+  return new Promise((resolve, reject) => {
+    const req = https.request(
+      {
+        hostname: 'openapi.naver.com',
+        path: '/v1/nid/me',
+        method: 'GET',
+        headers: { Authorization: `Bearer ${naverAccessToken}` },
+      },
+      (res) => {
+        let data = '';
+        res.on('data', (chunk) => (data += chunk));
+        res.on('end', () => {
+          try { resolve(JSON.parse(data)); } catch (e) { reject(e); }
+        });
+      }
+    );
+    req.on('error', reject);
+    req.end();
+  });
+}
+
+// POST /api/auth/oauth/naver
+async function loginWithNaver(req, res) {
+  const { access_token: naverToken } = req.body;
+  if (!naverToken) {
+    return res.status(400).json({ error: 'access_token은 필수입니다' });
+  }
+
+  try {
+    const profile = await getNaverProfile(naverToken);
+    if (profile.resultcode !== '00') {
+      return res.status(401).json({ error: '네이버 인증에 실패했습니다' });
+    }
+
+    const { email, name } = profile.response;
+    if (!email) {
+      return res.status(400).json({ error: '네이버 계정에 이메일이 없습니다. 이메일 제공 동의가 필요합니다.' });
+    }
+
+    const upsertResult = await pool.query(
+      `INSERT INTO users (email, name, auth_provider)
+       VALUES ($1, $2, 'naver')
+       ON CONFLICT (email) DO UPDATE
+         SET auth_provider = 'naver'
+       RETURNING user_id, email, name, auth_provider`,
+      [email, name || '네이버 사용자']
+    );
+    const user = upsertResult.rows[0];
+
+    const ledgerCheck = await pool.query(
+      'SELECT ledger_id FROM ledgers WHERE owner_id = $1 ORDER BY created_at ASC LIMIT 1',
+      [user.user_id]
+    );
+    let ledger_id;
+    if (ledgerCheck.rows.length === 0) {
+      const ledgerResult = await pool.query(
+        `INSERT INTO ledgers (owner_id, ledger_name) VALUES ($1, '내 장부') RETURNING ledger_id`,
+        [user.user_id]
+      );
+      ledger_id = ledgerResult.rows[0].ledger_id;
+    } else {
+      ledger_id = ledgerCheck.rows[0].ledger_id;
+    }
+
+    const access_token = signAccessToken(user);
+    const refresh_token = signRefreshToken(user);
+
+    res.json({ access_token, refresh_token, ledger_id });
+  } catch (err) {
+    console.error('[loginWithNaver]', err);
+    res.status(401).json({ error: '네이버 인증에 실패했습니다' });
+  }
+}
+
+module.exports = { signup, login, refresh, verify, loginWithGoogle, loginWithNaver };
