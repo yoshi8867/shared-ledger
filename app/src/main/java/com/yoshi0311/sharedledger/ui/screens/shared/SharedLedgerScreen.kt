@@ -1,5 +1,8 @@
 package com.yoshi0311.sharedledger.ui.screens.shared
 
+import android.content.ClipData
+import android.content.ClipboardManager
+import android.content.Context
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -13,9 +16,15 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.ContentCopy
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Badge
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -44,10 +53,13 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.yoshi0311.sharedledger.network.api.SharedLedgerDto
 import com.yoshi0311.sharedledger.network.api.SharedUserDto
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -56,22 +68,36 @@ fun SharedLedgerScreen(
     onNavigateBack: () -> Unit,
     viewModel: SharedLedgerViewModel = hiltViewModel()
 ) {
-    val uiState     by viewModel.uiState.collectAsStateWithLifecycle()
-    val actionState by viewModel.actionState.collectAsStateWithLifecycle()
-    val searchResult by viewModel.searchResult.collectAsStateWithLifecycle()
-    val searchError  by viewModel.searchError.collectAsStateWithLifecycle()
+    val context = LocalContext.current
+
+    val ledgerName       by viewModel.ledgerName.collectAsStateWithLifecycle()
+    val isOwner          by viewModel.isOwner.collectAsStateWithLifecycle()
+    val uiState          by viewModel.uiState.collectAsStateWithLifecycle()
+    val actionState      by viewModel.actionState.collectAsStateWithLifecycle()
+    val searchResult     by viewModel.searchResult.collectAsStateWithLifecycle()
+    val searchError      by viewModel.searchError.collectAsStateWithLifecycle()
+    val sharedWithMe     by viewModel.sharedWithMe.collectAsStateWithLifecycle()
+    val inviteCode       by viewModel.inviteCode.collectAsStateWithLifecycle()
+    val inviteCodeExpiry by viewModel.inviteCodeExpiry.collectAsStateWithLifecycle()
 
     val snackbarHostState = remember { SnackbarHostState() }
 
-    var searchEmail     by rememberSaveable { mutableStateOf("") }
+    var searchEmail      by rememberSaveable { mutableStateOf("") }
     var invitePermission by rememberSaveable { mutableStateOf("view") }
     var showInviteDialog by remember { mutableStateOf(false) }
+    var isEditingName    by remember { mutableStateOf(false) }
+    var editNameValue    by rememberSaveable(ledgerName) { mutableStateOf(ledgerName) }
+    var joinCode         by rememberSaveable { mutableStateOf("") }
+    var showJoinDialog   by remember { mutableStateOf(false) }
 
     LaunchedEffect(actionState) {
         when (val s = actionState) {
             is SharedActionState.Success -> {
                 snackbarHostState.showSnackbar("완료")
                 viewModel.resetActionState()
+                isEditingName = false
+                joinCode = ""
+                showJoinDialog = false
             }
             is SharedActionState.Error -> {
                 snackbarHostState.showSnackbar(s.message)
@@ -85,7 +111,7 @@ fun SharedLedgerScreen(
         snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = {
             TopAppBar(
-                title = { Text("공유 관리") },
+                title = { Text("장부 관리") },
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "뒤로")
@@ -101,98 +127,258 @@ fun SharedLedgerScreen(
                 .padding(horizontal = 16.dp),
             verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-            // ── 초대 섹션 ────────────────────────────────────────────────────
+
+            // ── 내 장부 ──────────────────────────────────────────────────────
             item {
                 Spacer(Modifier.height(8.dp))
-                Text("사용자 초대", style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold)
+                SectionHeader("내 장부")
                 Spacer(Modifier.height(8.dp))
 
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    OutlinedTextField(
-                        value = searchEmail,
-                        onValueChange = { searchEmail = it; viewModel.clearSearchResult() },
-                        label = { Text("이메일") },
-                        modifier = Modifier.weight(1f),
-                        singleLine = true
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = CardDefaults.cardColors(
+                        containerColor = MaterialTheme.colorScheme.primaryContainer
                     )
-                    IconButton(
-                        onClick = { if (searchEmail.isNotBlank()) viewModel.searchUser(searchEmail) }
-                    ) {
-                        Icon(Icons.Filled.Search, contentDescription = "검색")
-                    }
-                }
-
-                // 검색 결과
-                if (searchError != null) {
-                    Text(searchError!!, color = MaterialTheme.colorScheme.error,
-                        style = MaterialTheme.typography.bodySmall,
-                        modifier = Modifier.padding(top = 4.dp))
-                }
-                searchResult?.let { user ->
-                    Card(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(top = 8.dp),
-                        colors = CardDefaults.cardColors(
-                            containerColor = MaterialTheme.colorScheme.secondaryContainer
-                        )
-                    ) {
+                ) {
+                    if (isEditingName) {
+                        Column(modifier = Modifier.padding(12.dp)) {
+                            OutlinedTextField(
+                                value = editNameValue,
+                                onValueChange = { editNameValue = it },
+                                label = { Text("장부 이름") },
+                                modifier = Modifier.fillMaxWidth(),
+                                singleLine = true
+                            )
+                            Spacer(Modifier.height(8.dp))
+                            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                                Button(
+                                    onClick = { viewModel.renameLedger(editNameValue) },
+                                    enabled = editNameValue.isNotBlank() && editNameValue != ledgerName
+                                ) {
+                                    Icon(Icons.Filled.Check, contentDescription = null)
+                                    Text("저장", modifier = Modifier.padding(start = 4.dp))
+                                }
+                                OutlinedButton(onClick = {
+                                    isEditingName = false
+                                    editNameValue = ledgerName
+                                }) {
+                                    Icon(Icons.Filled.Close, contentDescription = null)
+                                    Text("취소", modifier = Modifier.padding(start = 4.dp))
+                                }
+                            }
+                        }
+                    } else {
                         Row(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .padding(12.dp),
+                                .padding(horizontal = 16.dp, vertical = 12.dp),
                             verticalAlignment = Alignment.CenterVertically,
                             horizontalArrangement = Arrangement.SpaceBetween
                         ) {
-                            Column {
-                                Text(user.name, style = MaterialTheme.typography.bodyMedium,
-                                    fontWeight = FontWeight.Medium)
-                                Text(user.email, style = MaterialTheme.typography.bodySmall)
+                            Column(modifier = Modifier.weight(1f)) {
+                                Text(
+                                    text = ledgerName.ifBlank { "내 장부" },
+                                    style = MaterialTheme.typography.titleMedium,
+                                    fontWeight = FontWeight.Bold
+                                )
+                                Text(
+                                    text = "내가 소유한 장부",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.7f)
+                                )
                             }
-                            Button(onClick = { showInviteDialog = true }) {
-                                Text("초대")
+                            if (isOwner) {
+                                IconButton(onClick = {
+                                    editNameValue = ledgerName
+                                    isEditingName = true
+                                }) {
+                                    Icon(Icons.Filled.Edit, contentDescription = "이름 수정")
+                                }
                             }
                         }
                     }
                 }
             }
 
-            // ── 공유 사용자 목록 ─────────────────────────────────────────────
-            item {
-                Spacer(Modifier.height(16.dp))
-                HorizontalDivider()
-                Spacer(Modifier.height(8.dp))
-                Text("공유 중인 사용자", style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold)
-                Spacer(Modifier.height(4.dp))
-            }
-
-            if (uiState.isLoading) {
+            // ── 공유 관리 (소유자만) ──────────────────────────────────────────
+            if (isOwner) {
                 item {
-                    Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
-                        CircularProgressIndicator()
+                    Spacer(Modifier.height(8.dp))
+                    HorizontalDivider()
+                    Spacer(Modifier.height(8.dp))
+                    SectionHeader("공유 중인 사용자")
+                    Spacer(Modifier.height(8.dp))
+
+                    // 이메일 검색 + 초대
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        OutlinedTextField(
+                            value = searchEmail,
+                            onValueChange = { searchEmail = it; viewModel.clearSearchResult() },
+                            label = { Text("이메일로 검색") },
+                            modifier = Modifier.weight(1f),
+                            singleLine = true
+                        )
+                        IconButton(
+                            onClick = { if (searchEmail.isNotBlank()) viewModel.searchUser(searchEmail) }
+                        ) {
+                            Icon(Icons.Filled.Search, contentDescription = "검색")
+                        }
+                    }
+
+                    if (searchError != null) {
+                        Text(
+                            searchError!!,
+                            color = MaterialTheme.colorScheme.error,
+                            style = MaterialTheme.typography.bodySmall,
+                            modifier = Modifier.padding(top = 4.dp)
+                        )
+                    }
+
+                    searchResult?.let { user ->
+                        Card(
+                            modifier = Modifier.fillMaxWidth().padding(top = 8.dp),
+                            colors = CardDefaults.cardColors(
+                                containerColor = MaterialTheme.colorScheme.secondaryContainer
+                            )
+                        ) {
+                            Row(
+                                modifier = Modifier.fillMaxWidth().padding(12.dp),
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.SpaceBetween
+                            ) {
+                                Column {
+                                    Text(user.name, style = MaterialTheme.typography.bodyMedium,
+                                        fontWeight = FontWeight.Medium)
+                                    Text(user.email, style = MaterialTheme.typography.bodySmall)
+                                }
+                                Button(onClick = { showInviteDialog = true }) { Text("초대") }
+                            }
+                        }
+                    }
+
+                    // ── 초대 코드 ────────────────────────────────────────────
+                    Spacer(Modifier.height(12.dp))
+                    Text(
+                        "초대 코드",
+                        style = MaterialTheme.typography.labelMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    Spacer(Modifier.height(6.dp))
+
+                    Card(
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = CardDefaults.cardColors(
+                            containerColor = MaterialTheme.colorScheme.surfaceVariant
+                        )
+                    ) {
+                        if (inviteCode != null) {
+                            Column(
+                                modifier = Modifier.fillMaxWidth().padding(16.dp),
+                                horizontalAlignment = Alignment.CenterHorizontally
+                            ) {
+                                Text(
+                                    text = inviteCode!!,
+                                    style = MaterialTheme.typography.displaySmall,
+                                    fontWeight = FontWeight.Bold,
+                                    letterSpacing = androidx.compose.ui.unit.TextUnit(
+                                        6f, androidx.compose.ui.unit.TextUnitType.Sp
+                                    ),
+                                    textAlign = TextAlign.Center
+                                )
+                                Text(
+                                    text = "5분 동안 유효",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    modifier = Modifier.padding(top = 4.dp)
+                                )
+                                Spacer(Modifier.height(12.dp))
+                                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                                    OutlinedButton(onClick = {
+                                        val clip = ClipData.newPlainText("초대 코드", inviteCode)
+                                        (context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager)
+                                            .setPrimaryClip(clip)
+                                    }) {
+                                        Icon(Icons.Filled.ContentCopy, contentDescription = null)
+                                        Text("복사", modifier = Modifier.padding(start = 4.dp))
+                                    }
+                                    OutlinedButton(onClick = { viewModel.generateInviteCode() }) {
+                                        Icon(Icons.Filled.Refresh, contentDescription = null)
+                                        Text("갱신", modifier = Modifier.padding(start = 4.dp))
+                                    }
+                                }
+                            }
+                        } else {
+                            Box(
+                                modifier = Modifier.fillMaxWidth().padding(16.dp),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Button(onClick = { viewModel.generateInviteCode() }) {
+                                    Text("초대 코드 생성")
+                                }
+                            }
+                        }
                     }
                 }
-            } else if (uiState.sharedUsers.isEmpty()) {
-                item {
-                    Text("공유된 사용자가 없습니다.",
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant)
+
+                // 공유 중인 사용자 목록
+                if (uiState.isLoading) {
+                    item {
+                        Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
+                            CircularProgressIndicator()
+                        }
+                    }
+                } else if (uiState.sharedUsers.isEmpty()) {
+                    item {
+                        Text(
+                            "공유된 사용자가 없습니다.",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            modifier = Modifier.padding(vertical = 4.dp)
+                        )
+                    }
+                } else {
+                    items(uiState.sharedUsers) { user ->
+                        SharedUserItem(
+                            user = user,
+                            onPermissionChange = { viewModel.updatePermission(user.sharedLedgerId, it) },
+                            onRevoke = { viewModel.revokeAccess(user.sharedLedgerId) }
+                        )
+                    }
                 }
-            } else {
-                items(uiState.sharedUsers) { user ->
-                    SharedUserItem(
-                        user = user,
-                        onPermissionChange = { newPerm ->
-                            viewModel.updatePermission(user.sharedLedgerId, newPerm)
-                        },
-                        onRevoke = { viewModel.revokeAccess(user.sharedLedgerId) }
+            }
+
+            // ── 공유받은 장부 ─────────────────────────────────────────────────
+            item {
+                Spacer(Modifier.height(8.dp))
+                HorizontalDivider()
+                Spacer(Modifier.height(8.dp))
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    SectionHeader("공유받은 장부")
+                    TextButton(onClick = { showJoinDialog = true }) {
+                        Text("코드로 참가")
+                    }
+                }
+                Spacer(Modifier.height(4.dp))
+
+                if (sharedWithMe.isEmpty()) {
+                    Text(
+                        "공유받은 장부가 없습니다.",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.padding(vertical = 4.dp)
                     )
                 }
+            }
+
+            items(sharedWithMe) { item ->
+                SharedWithMeItem(item)
             }
 
             item { Spacer(Modifier.height(16.dp)) }
@@ -230,6 +416,95 @@ fun SharedLedgerScreen(
             }
         )
     }
+
+    // 코드로 참가 다이얼로그
+    if (showJoinDialog) {
+        AlertDialog(
+            onDismissRequest = { showJoinDialog = false; joinCode = "" },
+            title = { Text("초대 코드로 참가") },
+            text = {
+                Column {
+                    Text(
+                        "상대방이 공유한 6자리 코드를 입력하세요.",
+                        style = MaterialTheme.typography.bodyMedium
+                    )
+                    Spacer(Modifier.height(12.dp))
+                    OutlinedTextField(
+                        value = joinCode,
+                        onValueChange = { joinCode = it.uppercase().take(6) },
+                        label = { Text("초대 코드") },
+                        singleLine = true,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                }
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = { viewModel.joinLedger(joinCode) },
+                    enabled = joinCode.length == 6
+                ) { Text("참가") }
+            },
+            dismissButton = {
+                TextButton(onClick = { showJoinDialog = false; joinCode = "" }) { Text("취소") }
+            }
+        )
+    }
+}
+
+@Composable
+private fun SectionHeader(title: String) {
+    Text(
+        text = title,
+        style = MaterialTheme.typography.titleMedium,
+        fontWeight = FontWeight.Bold
+    )
+}
+
+@Composable
+private fun SharedWithMeItem(item: SharedLedgerDto) {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surfaceVariant
+        )
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp, vertical = 12.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = item.ledgerName,
+                    style = MaterialTheme.typography.bodyLarge,
+                    fontWeight = FontWeight.Medium
+                )
+                Text(
+                    text = "소유자: ${item.ownerName}",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+                Text(
+                    text = item.ownerEmail,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
+                )
+            }
+            Badge(
+                containerColor = if (item.permission == "edit")
+                    MaterialTheme.colorScheme.primary
+                else
+                    MaterialTheme.colorScheme.secondary
+            ) {
+                Text(
+                    text = if (item.permission == "edit") "편집" else "조회",
+                    modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                )
+            }
+        }
+    }
 }
 
 @Composable
@@ -260,7 +535,6 @@ private fun SharedUserItem(
                 Text(user.email, style = MaterialTheme.typography.bodySmall)
             }
 
-            // 권한 뱃지 (클릭 시 변경 메뉴)
             Box {
                 OutlinedButton(onClick = { showPermMenu = true }) {
                     Text(if (user.permission == "edit") "편집" else "조회")

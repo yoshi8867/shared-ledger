@@ -114,7 +114,7 @@ router.post('/:id/invite-code', authMiddleware, async (req, res) => {
     for (let i = 0; i < 6; i++) {
       code += chars[Math.floor(Math.random() * chars.length)];
     }
-    const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000); // 7일
+    const expiresAt = new Date(Date.now() + 5 * 60 * 1000); // 5분
 
     await pool.query(
       `UPDATE ledgers SET invite_code = $1, invite_expires_at = $2 WHERE ledger_id = $3`,
