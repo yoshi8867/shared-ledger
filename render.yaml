@@ -23,3 +23,5 @@ services:
         value: 7d
       - key: JWT_REFRESH_EXPIRES_IN
         value: 30d
+      - key: GOOGLE_CLIENT_ID
+        sync: false

@@ -2,6 +2,7 @@ package com.yoshi0311.sharedledger.data.repository
 
 import com.yoshi0311.sharedledger.data.datastore.AuthDataStore
 import com.yoshi0311.sharedledger.network.api.AuthApi
+import com.yoshi0311.sharedledger.network.api.GoogleLoginRequest
 import com.yoshi0311.sharedledger.network.api.LoginRequest
 import com.yoshi0311.sharedledger.network.api.RefreshRequest
 import com.yoshi0311.sharedledger.network.api.SignupRequest
@@ -39,6 +40,12 @@ class AuthRepository @Inject constructor(
 
     suspend fun login(email: String, password: String): AuthResult = runCatching {
         val res = api.login(LoginRequest(email, password))
+        authDataStore.saveTokens(res.accessToken, res.refreshToken, res.ledgerId)
+        AuthResult.Success
+    }.getOrElse { e -> AuthResult.Error(e.toDisplayMessage()) }
+
+    suspend fun loginWithGoogle(idToken: String): AuthResult = runCatching {
+        val res = api.loginWithGoogle(GoogleLoginRequest(idToken))
         authDataStore.saveTokens(res.accessToken, res.refreshToken, res.ledgerId)
         AuthResult.Success
     }.getOrElse { e -> AuthResult.Error(e.toDisplayMessage()) }

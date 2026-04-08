@@ -42,6 +42,7 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -55,6 +56,7 @@ fun LoginScreen(
     onNavigateToSignup: () -> Unit,
     viewModel: AuthViewModel = hiltViewModel()
 ) {
+    val context = LocalContext.current
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     var passwordVisible by remember { mutableStateOf(false) }
@@ -186,15 +188,14 @@ fun LoginScreen(
             Spacer(modifier = Modifier.height(24.dp))
 
             OutlinedButton(
-                onClick = { /* TODO: Google OAuth */ },
+                onClick = { viewModel.loginWithGoogle(context) },
                 modifier = Modifier.fillMaxWidth().height(52.dp),
                 border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline),
-                enabled = false
+                enabled = !uiState.isLoading
             ) {
                 Text(
-                    text = "Google로 로그인 (준비 중)",
-                    style = MaterialTheme.typography.labelLarge,
-                    color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.4f)
+                    text = "Google로 로그인",
+                    style = MaterialTheme.typography.labelLarge
                 )
             }
 

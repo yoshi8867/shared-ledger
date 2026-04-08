@@ -1,6 +1,9 @@
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
+const { OAuth2Client } = require('google-auth-library');
 const { pool } = require('../db/pool');
+
+const googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
 const SALT_ROUNDS = 10;
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -185,4 +188,56 @@ async function verify(req, res) {
   }
 }
 
-module.exports = { signup, login, refresh, verify };
+// POST /api/auth/oauth/google
+async function loginWithGoogle(req, res) {
+  const { id_token } = req.body;
+  if (!id_token) {
+    return res.status(400).json({ error: 'id_token은 필수입니다' });
+  }
+
+  try {
+    const ticket = await googleClient.verifyIdToken({
+      idToken: id_token,
+      audience: process.env.GOOGLE_CLIENT_ID,
+    });
+    const payload = ticket.getPayload();
+    const { email, name } = payload;
+
+    // upsert: 없으면 생성, 있으면 조회
+    const upsertResult = await pool.query(
+      `INSERT INTO users (email, name, auth_provider)
+       VALUES ($1, $2, 'google')
+       ON CONFLICT (email) DO UPDATE
+         SET auth_provider = 'google'
+       RETURNING user_id, email, name, auth_provider`,
+      [email, name]
+    );
+    const user = upsertResult.rows[0];
+
+    // 장부가 없으면 기본 장부 생성
+    const ledgerCheck = await pool.query(
+      'SELECT ledger_id FROM ledgers WHERE owner_id = $1 ORDER BY created_at ASC LIMIT 1',
+      [user.user_id]
+    );
+    let ledger_id;
+    if (ledgerCheck.rows.length === 0) {
+      const ledgerResult = await pool.query(
+        `INSERT INTO ledgers (owner_id, ledger_name) VALUES ($1, '내 장부') RETURNING ledger_id`,
+        [user.user_id]
+      );
+      ledger_id = ledgerResult.rows[0].ledger_id;
+    } else {
+      ledger_id = ledgerCheck.rows[0].ledger_id;
+    }
+
+    const access_token = signAccessToken(user);
+    const refresh_token = signRefreshToken(user);
+
+    res.json({ access_token, refresh_token, ledger_id });
+  } catch (err) {
+    console.error('[loginWithGoogle]', err);
+    res.status(401).json({ error: 'Google 인증에 실패했습니다' });
+  }
+}
+
+module.exports = { signup, login, refresh, verify, loginWithGoogle };

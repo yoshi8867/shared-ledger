@@ -19,6 +19,10 @@ data class RefreshRequest(
     @SerializedName("refresh_token") val refreshToken: String
 )
 
+data class GoogleLoginRequest(
+    @SerializedName("id_token") val idToken: String
+)
+
 data class AuthResponse(
     @SerializedName("access_token") val accessToken: String,
     @SerializedName("refresh_token") val refreshToken: String,
@@ -34,4 +38,7 @@ interface AuthApi {
 
     @POST("api/auth/refresh")
     suspend fun refresh(@Body req: RefreshRequest): AuthResponse
+
+    @POST("api/auth/oauth/google")
+    suspend fun loginWithGoogle(@Body req: GoogleLoginRequest): AuthResponse
 }

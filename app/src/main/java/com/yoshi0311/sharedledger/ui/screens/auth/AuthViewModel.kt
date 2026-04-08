@@ -1,7 +1,9 @@
 package com.yoshi0311.sharedledger.ui.screens.auth
 
+import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.yoshi0311.sharedledger.auth.GoogleSignInHelper
 import com.yoshi0311.sharedledger.data.repository.AuthRepository
 import com.yoshi0311.sharedledger.data.repository.AuthResult
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -24,6 +26,21 @@ class AuthViewModel @Inject constructor(
 
     private val _uiState = MutableStateFlow(AuthUiState())
     val uiState: StateFlow<AuthUiState> = _uiState.asStateFlow()
+
+    fun loginWithGoogle(context: Context) {
+        viewModelScope.launch {
+            _uiState.value = AuthUiState(isLoading = true)
+            val tokenResult = GoogleSignInHelper.getIdToken(context)
+            if (tokenResult.isFailure) {
+                _uiState.value = AuthUiState(error = "Google 로그인을 취소했거나 실패했습니다")
+                return@launch
+            }
+            _uiState.value = when (val result = authRepository.loginWithGoogle(tokenResult.getOrThrow())) {
+                is AuthResult.Success -> AuthUiState(isSuccess = true)
+                is AuthResult.Error -> AuthUiState(error = result.message)
+            }
+        }
+    }
 
     fun login(email: String, password: String) {
         if (email.isBlank() || password.isBlank()) {

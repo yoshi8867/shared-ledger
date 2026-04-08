@@ -95,8 +95,10 @@ dependencies {
     // implementation(platform(libs.firebase.bom))
     // implementation(libs.firebase.messaging)
 
-    // OAuth
-    // implementation(libs.play.services.auth)
+    // OAuth - Credential Manager (Google Sign-In)
+    implementation(libs.credentials)
+    implementation(libs.credentials.play.services.auth)
+    implementation(libs.googleid)
 
     // Testing
     testImplementation(libs.junit)
