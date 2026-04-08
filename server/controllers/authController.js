@@ -277,18 +277,24 @@ async function loginWithNaver(req, res) {
       return res.status(401).json({ error: '네이버 인증에 실패했습니다' });
     }
 
-    const { email, name } = profile.response;
-    if (!email) {
-      return res.status(400).json({ error: '네이버 계정에 이메일이 없습니다. 이메일 제공 동의가 필요합니다.' });
+    // id: 네이버가 제공하는 사용자 고유 식별자 (변경되지 않음)
+    // name/nickname: 표시 이름 (name 우선, 없으면 nickname)
+    const { id: naverId, name, nickname } = profile.response;
+    if (!naverId) {
+      return res.status(401).json({ error: '네이버 사용자 ID를 가져올 수 없습니다' });
     }
+
+    // email 컬럼 UNIQUE 제약을 만족하기 위해 네이버 고유 ID로 가상 이메일 생성
+    const syntheticEmail = `naver_${naverId}@oauth.local`;
+    const displayName = name || nickname || '네이버 사용자';
 
     const upsertResult = await pool.query(
       `INSERT INTO users (email, name, auth_provider)
        VALUES ($1, $2, 'naver')
        ON CONFLICT (email) DO UPDATE
-         SET auth_provider = 'naver'
+         SET name = EXCLUDED.name
        RETURNING user_id, email, name, auth_provider`,
-      [email, name || '네이버 사용자']
+      [syntheticEmail, displayName]
     );
     const user = upsertResult.rows[0];
 
