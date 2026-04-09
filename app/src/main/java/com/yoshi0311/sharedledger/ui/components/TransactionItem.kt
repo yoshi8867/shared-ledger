@@ -2,6 +2,7 @@ package com.yoshi0311.sharedledger.ui.components
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -54,12 +55,22 @@ fun TransactionItem(
                 text = transaction.description.ifBlank { category?.name ?: "내역 없음" },
                 style = MaterialTheme.typography.bodyMedium
             )
-            if (category != null) {
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(6.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
                 Text(
-                    text = category.name,
+                    text = transaction.time.take(5),
                     style = MaterialTheme.typography.labelSmall,
                     color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
                 )
+                if (category != null) {
+                    Text(
+                        text = category.name,
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
+                    )
+                }
             }
         }
         Text(

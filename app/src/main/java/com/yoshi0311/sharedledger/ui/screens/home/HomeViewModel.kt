@@ -15,6 +15,8 @@ import com.yoshi0311.sharedledger.network.api.SharedLedgerDto
 import com.yoshi0311.sharedledger.util.AppYearMonth
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -24,7 +26,9 @@ import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
+import java.io.IOException
 import java.util.Calendar
 import javax.inject.Inject
 
@@ -146,18 +150,40 @@ class HomeViewModel @Inject constructor(
     private val _syncState = MutableStateFlow<SyncState>(SyncState.Idle)
     val syncState: StateFlow<SyncState> = _syncState.asStateFlow()
 
+    private var syncJob: Job? = null
+
     fun sync() {
-        if (_syncState.value is SyncState.Loading) return
-        viewModelScope.launch {
+        if (syncJob?.isActive == true) return
+        syncJob = viewModelScope.launch {
             _syncState.value = SyncState.Loading
-            val ledgerId = currentLedgerId.value
-            val result = syncRepo.sync(ledgerId)
-            _syncState.value = if (result.isSuccess) SyncState.Success
-                               else SyncState.Error(result.exceptionOrNull()?.message ?: "동기화 실패")
+            while (isActive) {
+                val ledgerId = currentLedgerId.value
+                val result = syncRepo.sync(ledgerId)
+                when {
+                    result.isSuccess -> {
+                        _syncState.value = SyncState.Success
+                        break
+                    }
+                    result.exceptionOrNull() is IOException -> {
+                        // 네트워크/타임아웃 오류 → 로딩 유지, 60초 후 재시도
+                        delay(60_000L)
+                    }
+                    else -> {
+                        // API 오류(인증 실패 등) → 즉시 에러
+                        _syncState.value = SyncState.Error(
+                            result.exceptionOrNull()?.message ?: "동기화 실패"
+                        )
+                        break
+                    }
+                }
+            }
         }
     }
 
-    fun resetSyncState() { _syncState.value = SyncState.Idle }
+    fun resetSyncState() {
+        syncJob?.cancel()
+        _syncState.value = SyncState.Idle
+    }
 
     fun nextMonth() {
         _selectedMonth.value = _selectedMonth.value.next()

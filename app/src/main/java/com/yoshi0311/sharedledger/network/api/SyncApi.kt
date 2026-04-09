@@ -6,6 +6,8 @@ import retrofit2.http.GET
 import retrofit2.http.POST
 import retrofit2.http.Query
 
+data class HealthResponse(val status: String)
+
 // ── Delta 응답 ────────────────────────────────────────────────────────────────
 
 data class DeltaResponse(
@@ -81,6 +83,10 @@ data class PushResultDto(
 // ── Retrofit 인터페이스 ─────────────────────────────────────────────────────────
 
 interface SyncApi {
+    /** 서버 헬스 체크 (Render 서버 웜업용) */
+    @GET("api/health")
+    suspend fun ping(): HealthResponse
+
     /** 마지막 동기화 이후 변경된 데이터 조회 */
     @GET("api/sync/delta")
     suspend fun getDelta(@Query("since") since: String): DeltaResponse

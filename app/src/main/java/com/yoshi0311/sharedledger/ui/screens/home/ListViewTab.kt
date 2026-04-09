@@ -57,7 +57,10 @@ fun ListViewTab(
 
     val categoryMap = categories.associateBy { it.id }
     val dateFormat = SimpleDateFormat("MM월 dd일 (EEE)", Locale.KOREA)
-    val grouped = transactions.groupBy { dateFormat.format(it.date) }
+    val sorted = transactions.sortedWith(
+        compareByDescending<TransactionEntity> { it.date }.thenBy { it.time }
+    )
+    val grouped = sorted.groupBy { dateFormat.format(it.date) }
 
     LazyColumn(modifier = Modifier.fillMaxSize()) {
         grouped.forEach { (dateStr, txList) ->

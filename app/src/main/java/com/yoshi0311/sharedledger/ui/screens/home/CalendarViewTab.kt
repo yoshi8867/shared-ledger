@@ -44,7 +44,7 @@ fun CalendarViewTab(
         transactions.filter { tx ->
             cal.time = tx.date
             cal.get(Calendar.DAY_OF_MONTH) == selectedDay
-        }
+        }.sortedBy { it.time }
     }
 
     if (isLoading) {
