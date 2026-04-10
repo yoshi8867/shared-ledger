@@ -36,6 +36,9 @@ import androidx.compose.material3.ListItem
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SegmentedButton
+import androidx.compose.material3.SegmentedButtonDefaults
+import androidx.compose.material3.SingleChoiceSegmentedButtonRow
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
@@ -53,6 +56,7 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.yoshi0311.sharedledger.data.db.entity.CategoryEntity
+import androidx.compose.runtime.collectAsState
 
 private val PRESET_COLORS = listOf(
     "#F44336", "#FF9800", "#FFEB3B", "#4CAF50", "#2196F3", "#9C27B0",
@@ -66,6 +70,7 @@ fun CategoryManageScreen(
     viewModel: CategoryManageViewModel = hiltViewModel()
 ) {
     val categories by viewModel.categories.collectAsStateWithLifecycle()
+    val selectedType by viewModel.selectedType.collectAsState()
 
     var showAddDialog by remember { mutableStateOf(false) }
     var editingCategory by remember { mutableStateOf<CategoryEntity?>(null) }
@@ -93,41 +98,59 @@ fun CategoryManageScreen(
             }
         }
     ) { padding ->
-        if (categories.isEmpty()) {
-            Column(
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(padding)
+        ) {
+            // 수입/지출 탭
+            SingleChoiceSegmentedButtonRow(
                 modifier = Modifier
-                    .fillMaxSize()
-                    .padding(padding)
-                    .padding(16.dp),
-                verticalArrangement = Arrangement.Center,
-                horizontalAlignment = Alignment.CenterHorizontally
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp, vertical = 8.dp)
             ) {
-                Text(
-                    text = "구분이 없습니다",
-                    style = MaterialTheme.typography.headlineSmall,
-                    modifier = Modifier.padding(bottom = 8.dp)
-                )
-                Text(
-                    text = "우측 하단의 + 버튼으로 새 구분을 추가하세요",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-            }
-        } else {
-            LazyColumn(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(padding)
-            ) {
-                items(categories) { cat ->
-                    CategoryItemRow(
-                        category = cat,
-                        onEdit = {
-                            editingCategory = cat
-                            showAddDialog = true
-                        },
-                        onDelete = { deleteConfirmId = cat.id }
+                listOf("expense" to "지출", "income" to "수입").forEachIndexed { index, (value, label) ->
+                    SegmentedButton(
+                        selected = selectedType == value,
+                        onClick = { viewModel.selectType(value) },
+                        shape = SegmentedButtonDefaults.itemShape(index, 2),
+                        label = { Text(label) }
                     )
+                }
+            }
+
+            if (categories.isEmpty()) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(16.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        Text(
+                            text = "${if (selectedType == "expense") "지출" else "수입"} 구분이 없습니다",
+                            style = MaterialTheme.typography.headlineSmall,
+                            modifier = Modifier.padding(bottom = 8.dp)
+                        )
+                        Text(
+                            text = "우측 하단의 + 버튼으로 새 구분을 추가하세요",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                }
+            } else {
+                LazyColumn(modifier = Modifier.fillMaxSize()) {
+                    items(categories) { cat ->
+                        CategoryItemRow(
+                            category = cat,
+                            onEdit = {
+                                editingCategory = cat
+                                showAddDialog = true
+                            },
+                            onDelete = { deleteConfirmId = cat.id }
+                        )
+                    }
                 }
             }
         }
@@ -139,7 +162,7 @@ fun CategoryManageScreen(
             category = editingCategory,
             onConfirm = { name, color ->
                 if (editingCategory == null) {
-                    viewModel.addCategory(name, color)
+                    viewModel.addCategory(name, color, selectedType)
                 } else {
                     viewModel.updateCategory(editingCategory!!.id, name, color)
                 }

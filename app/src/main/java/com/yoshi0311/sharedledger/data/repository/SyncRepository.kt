@@ -72,6 +72,7 @@ class SyncRepository @Inject constructor(
                     serverId     = cat.serverId,
                     categoryName = cat.name,
                     color        = cat.color,
+                    type         = cat.type,
                     isDeleted    = cat.isDeleted,
                     updatedAt    = formatIso(cat.updatedAt)
                 )
@@ -129,6 +130,7 @@ class SyncRepository @Inject constructor(
                         ledgerId   = ledgerId,
                         name       = cat.categoryName,
                         color      = cat.color ?: "#808080",
+                        type       = cat.type.ifEmpty { "expense" },
                         serverId   = cat.categoryId,
                         syncStatus = "synced",
                         syncedAt   = serverDate,
@@ -141,6 +143,7 @@ class SyncRepository @Inject constructor(
                     existing.copy(
                         name       = cat.categoryName,
                         color      = cat.color ?: existing.color,
+                        type       = cat.type.ifEmpty { existing.type },
                         serverId   = cat.categoryId,
                         syncStatus = "synced",
                         syncedAt   = serverDate,

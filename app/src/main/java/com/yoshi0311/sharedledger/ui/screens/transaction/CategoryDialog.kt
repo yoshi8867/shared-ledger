@@ -5,23 +5,28 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.LazyHorizontalGrid
+import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Check
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
@@ -41,6 +46,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.yoshi0311.sharedledger.data.db.entity.CategoryEntity
 
@@ -63,6 +69,13 @@ fun CategoryDialog(
     var newName by remember { mutableStateOf("") }
     var selectedColor by remember { mutableStateOf(PRESET_COLORS[4]) }
 
+    // 항상 3열 고정, 최대 10행. 30개 초과 시 우측 스크롤
+    val count = categories.size
+    val colsVisible = 3
+    val rowCount = if (count == 0) 1 else minOf(10, (count + 2) / 3)
+    val gridHeight = (rowCount * 48).dp
+    val canScroll = count > rowCount * colsVisible
+
     ModalBottomSheet(
         onDismissRequest = onDismiss,
         sheetState = sheetState
@@ -81,17 +94,52 @@ fun CategoryDialog(
                     color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.5f),
                     modifier = Modifier.padding(vertical = 8.dp)
                 )
-            } else {
-                LazyColumn(modifier = Modifier.fillMaxWidth()) {
-                    items(categories) { cat ->
-                        CategoryItem(
-                            category = cat,
-                            isSelected = cat.id == selectedCategoryId,
-                            onClick = {
-                                onSelectCategory(cat)
-                                onDismiss()
+            } else if (categories.isNotEmpty()) {
+                Box(modifier = Modifier.fillMaxWidth()) {
+                    BoxWithConstraints(modifier = Modifier.fillMaxWidth()) {
+                        val cellWidth = maxWidth / colsVisible
+                        LazyHorizontalGrid(
+                            rows = GridCells.Fixed(rowCount),
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(gridHeight),
+                            horizontalArrangement = Arrangement.spacedBy(4.dp),
+                            verticalArrangement = Arrangement.spacedBy(4.dp)
+                        ) {
+                            items(categories, key = { it.id }) { cat ->
+                                CategoryGridCell(
+                                    category = cat,
+                                    isSelected = cat.id == selectedCategoryId,
+                                    modifier = Modifier.width(cellWidth),
+                                    onClick = {
+                                        onSelectCategory(cat)
+                                        onDismiss()
+                                    }
+                                )
                             }
-                        )
+                        }
+                    }
+                    if (canScroll) {
+                        val fadeColor = MaterialTheme.colorScheme.surface
+                        Box(
+                            modifier = Modifier
+                                .align(Alignment.CenterEnd)
+                                .width(48.dp)
+                                .height(gridHeight)
+                                .background(
+                                    Brush.horizontalGradient(
+                                        colors = listOf(Color.Transparent, fadeColor)
+                                    )
+                                ),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Icon(
+                                imageVector = Icons.AutoMirrored.Filled.ArrowForward,
+                                contentDescription = "더 보기",
+                                tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
+                                modifier = Modifier.size(18.dp)
+                            )
+                        }
                     }
                 }
             }
@@ -99,7 +147,6 @@ fun CategoryDialog(
             HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
 
             if (showAddForm) {
-                // 새 구분 추가 폼
                 OutlinedTextField(
                     value = newName,
                     onValueChange = { newName = it },
@@ -180,41 +227,51 @@ fun CategoryDialog(
 }
 
 @Composable
-private fun CategoryItem(
+private fun CategoryGridCell(
     category: CategoryEntity,
     isSelected: Boolean,
+    modifier: Modifier = Modifier,
     onClick: () -> Unit
 ) {
-    val color = runCatching { Color(android.graphics.Color.parseColor(category.color)) }
+    val dotColor = runCatching { Color(android.graphics.Color.parseColor(category.color)) }
         .getOrDefault(Color.Gray)
+    val primaryColor = MaterialTheme.colorScheme.primary
 
     Row(
-        modifier = Modifier
-            .fillMaxWidth()
+        modifier = modifier
+            .fillMaxHeight()
             .clip(RoundedCornerShape(8.dp))
+            .then(
+                if (isSelected)
+                    Modifier.border(2.dp, primaryColor, RoundedCornerShape(8.dp))
+                else Modifier
+            )
             .clickable(onClick = onClick)
-            .padding(horizontal = 12.dp, vertical = 10.dp),
+            .padding(horizontal = 8.dp, vertical = 4.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
         Box(
             modifier = Modifier
-                .size(20.dp)
+                .size(14.dp)
                 .clip(CircleShape)
-                .background(color)
-        )
-        Spacer(modifier = Modifier.width(12.dp))
+                .background(dotColor),
+            contentAlignment = Alignment.Center
+        ) {
+            if (isSelected) {
+                Icon(
+                    imageVector = Icons.Filled.Check,
+                    contentDescription = null,
+                    tint = Color.White,
+                    modifier = Modifier.size(10.dp)
+                )
+            }
+        }
+        Spacer(modifier = Modifier.width(6.dp))
         Text(
             text = category.name,
-            style = MaterialTheme.typography.bodyMedium,
-            modifier = Modifier.weight(1f)
+            style = MaterialTheme.typography.labelSmall,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis
         )
-        if (isSelected) {
-            Icon(
-                imageVector = Icons.Filled.Check,
-                contentDescription = null,
-                tint = MaterialTheme.colorScheme.primary,
-                modifier = Modifier.size(20.dp)
-            )
-        }
     }
 }

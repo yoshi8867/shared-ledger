@@ -26,6 +26,9 @@ interface CategoryDao {
     @Query("SELECT * FROM categories WHERE ledger_id = :ledgerId AND is_deleted = 0 ORDER BY name ASC")
     fun getByLedgerId(ledgerId: Long): Flow<List<CategoryEntity>>
 
+    @Query("SELECT * FROM categories WHERE ledger_id = :ledgerId AND type = :type AND is_deleted = 0 ORDER BY name ASC")
+    fun getByLedgerIdAndType(ledgerId: Long, type: String): Flow<List<CategoryEntity>>
+
     @Query("SELECT * FROM categories WHERE ledger_id = :ledgerId AND is_deleted = 0 AND synced_at IS NULL")
     fun getUnsyncedCategories(ledgerId: Long): Flow<List<CategoryEntity>>
 

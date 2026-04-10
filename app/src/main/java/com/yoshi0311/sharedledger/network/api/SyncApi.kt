@@ -36,6 +36,7 @@ data class ServerCategoryDto(
     @SerializedName("ledger_id")     val ledgerId: Long,
     @SerializedName("category_name") val categoryName: String,
     val color: String?,
+    val type: String = "expense",
     @SerializedName("is_deleted")    val isDeleted: Boolean,
     @SerializedName("updated_at")    val updatedAt: String
 )
@@ -65,6 +66,7 @@ data class PushCategoryDto(
     @SerializedName("server_id") val serverId: Long?,
     @SerializedName("category_name") val categoryName: String,
     val color: String?,
+    val type: String,
     @SerializedName("is_deleted") val isDeleted: Boolean,
     @SerializedName("updated_at") val updatedAt: String
 )

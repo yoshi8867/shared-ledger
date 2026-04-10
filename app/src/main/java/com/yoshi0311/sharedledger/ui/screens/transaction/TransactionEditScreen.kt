@@ -115,18 +115,19 @@ fun TransactionEditScreen(
     }
 
     val timeText = "%02d:%02d".format(selectedHour, selectedMinute)
-    val selectedCategory = categories.find { it.id == selectedCategoryId }
+    val filteredCategories = categories.filter { it.type == type }
+    val selectedCategory = filteredCategories.find { it.id == selectedCategoryId }
     val amountDisplay = amountRaw.toLongOrNull()?.let { numberFormat.format(it) } ?: amountRaw
 
     if (showCategoryDialog) {
         CategoryDialog(
-            categories = categories,
+            categories = filteredCategories,
             selectedCategoryId = selectedCategoryId ?: -1L,
             onSelectCategory = { cat ->
                 selectedCategoryId = cat.id
                 showCategoryDialog = false
             },
-            onAddCategory = { name, color -> viewModel.addCategory(name, color) },
+            onAddCategory = { name, color -> viewModel.addCategory(name, color, type) },
             onDismiss = { showCategoryDialog = false }
         )
     }
@@ -230,7 +231,12 @@ fun TransactionEditScreen(
                 listOf("expense" to "지출", "income" to "수입").forEachIndexed { index, (value, label) ->
                     SegmentedButton(
                         selected = type == value,
-                        onClick = { type = value },
+                        onClick = {
+                            if (type != value) {
+                                selectedCategoryId = null
+                                type = value
+                            }
+                        },
                         shape = SegmentedButtonDefaults.itemShape(index, 2),
                         label = { Text(label) }
                     )

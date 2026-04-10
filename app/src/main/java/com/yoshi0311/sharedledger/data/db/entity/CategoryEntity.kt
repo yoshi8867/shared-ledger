@@ -19,6 +19,9 @@ data class CategoryEntity(
     @ColumnInfo(name = "color")
     val color: String, // hex color code
 
+    @ColumnInfo(name = "type")
+    val type: String = "expense", // "income" | "expense"
+
     @ColumnInfo(name = "icon")
     val icon: String? = null,
 

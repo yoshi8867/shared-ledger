@@ -2,7 +2,7 @@
 
 **작성일:** 2026-04-05  
 **최종 업데이트:** 2026-04-10  
-**현재 Phase:** S4 OAuth 완료 (Google ✅ / Naver ✅) + 보안 개선 ✅ + UI 개선 ✅
+**현재 Phase:** S4 OAuth 완료 (Google ✅ / Naver ✅) + 보안 개선 ✅ + UI 개선 ✅ + 카테고리 type 구분 ✅
 
 ---
 
@@ -579,6 +579,7 @@
 **2026-04-10** | UI 개선 — TransactionItem 시각(HH:mm) 표시 (카테고리 우측), ListViewTab/CalendarViewTab 시간순 정렬 (날짜 내림차순 + 하루 내 시간 오름차순)
 **2026-04-10** | 통계 개선 — BarChart 카테고리별 토글(눈 아이콘)로 제외/포함, 제외 시 도넛 그래프 재조정 + 비율 재계산, 비활성 UI 표시; 카테고리 터치 시 해당 트랜잭션 목록 ModalBottomSheet (날짜 스티키 헤더, 시간순 정렬)
 **2026-04-10** | 버그 수정 — TransactionItem 시각 표시 HH:mm:ss → HH:mm (take(5) 트림); Render 서버 웜업: 앱 시작 시 /api/health 핑 (SplashViewModel); 동기화 네트워크 오류 시 60초 후 자동 재시도 (로딩 유지, IOException만 재시도, API 오류는 즉시 에러)
+**2026-04-10** | 카테고리 type 구분 (income/expense) — Neon ALTER TABLE 적용, 서버 CRUD/sync API 업데이트, Room Migration(4→5), CategoryEntity type 필드 추가, CategoryManageScreen 수입/지출 탭, TransactionEditScreen 타입별 필터링 및 전환 시 선택 초기화
 
 ---
 

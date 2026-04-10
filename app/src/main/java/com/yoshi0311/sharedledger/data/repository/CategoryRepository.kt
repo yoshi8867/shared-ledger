@@ -10,6 +10,9 @@ class CategoryRepository(private val dao: CategoryDao) {
     fun getByLedgerId(ledgerId: Long): Flow<List<CategoryEntity>> =
         dao.getByLedgerId(ledgerId)
 
+    fun getByLedgerIdAndType(ledgerId: Long, type: String): Flow<List<CategoryEntity>> =
+        dao.getByLedgerIdAndType(ledgerId, type)
+
     suspend fun insert(category: CategoryEntity): Long =
         dao.insert(category.copy(syncStatus = "pending"))
 

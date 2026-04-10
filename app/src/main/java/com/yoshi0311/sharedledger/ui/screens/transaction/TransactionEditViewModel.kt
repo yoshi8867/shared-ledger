@@ -109,13 +109,14 @@ class TransactionEditViewModel @Inject constructor(
         }
     }
 
-    fun addCategory(name: String, color: String) {
+    fun addCategory(name: String, color: String, type: String) {
         viewModelScope.launch {
             categoryRepo.insert(
                 CategoryEntity(
                     ledgerId = currentLedgerId(),
                     name = name,
-                    color = color
+                    color = color,
+                    type = type
                 )
             )
         }
