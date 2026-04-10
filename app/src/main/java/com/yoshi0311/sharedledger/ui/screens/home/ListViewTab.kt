@@ -1,8 +1,10 @@
 package com.yoshi0311.sharedledger.ui.screens.home
 
 import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -20,6 +22,7 @@ import androidx.compose.ui.unit.dp
 import com.yoshi0311.sharedledger.data.db.entity.CategoryEntity
 import com.yoshi0311.sharedledger.data.db.entity.TransactionEntity
 import com.yoshi0311.sharedledger.ui.components.TransactionItem
+import java.text.NumberFormat
 import java.text.SimpleDateFormat
 import java.util.Locale
 
@@ -57,6 +60,7 @@ fun ListViewTab(
 
     val categoryMap = categories.associateBy { it.id }
     val dateFormat = SimpleDateFormat("MM월 dd일 (EEE)", Locale.KOREA)
+    val fmt = NumberFormat.getNumberInstance(Locale.KOREA)
     val sorted = transactions.sortedWith(
         compareByDescending<TransactionEntity> { it.date }.thenBy { it.time }
     )
@@ -64,17 +68,42 @@ fun ListViewTab(
 
     LazyColumn(modifier = Modifier.fillMaxSize()) {
         grouped.forEach { (dateStr, txList) ->
+            val dailyIncome = txList.filter { it.type == "income" }.sumOf { it.amount }
+            val dailyExpense = txList.filter { it.type == "expense" }.sumOf { it.amount }
             stickyHeader(key = "header_$dateStr") {
                 Surface(
                     color = MaterialTheme.colorScheme.surfaceVariant,
                     modifier = Modifier.fillMaxWidth()
                 ) {
-                    Text(
-                        text = dateStr,
-                        style = MaterialTheme.typography.labelMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        modifier = Modifier.padding(horizontal = 16.dp, vertical = 6.dp)
-                    )
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 16.dp, vertical = 6.dp),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            text = dateStr,
+                            style = MaterialTheme.typography.labelMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                            if (dailyIncome > 0) {
+                                Text(
+                                    text = "+${fmt.format(dailyIncome)}",
+                                    style = MaterialTheme.typography.labelMedium,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                            }
+                            if (dailyExpense > 0) {
+                                Text(
+                                    text = "-${fmt.format(dailyExpense)}",
+                                    style = MaterialTheme.typography.labelMedium,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                            }
+                        }
+                    }
                 }
             }
             items(txList, key = { it.id }) { tx ->
