@@ -45,9 +45,14 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.yoshi0311.sharedledger.ui.components.MonthSelectorBar
-import java.text.NumberFormat
 import java.util.Calendar
-import java.util.Locale
+
+private fun formatShortAmount(amount: Long): String = when {
+    amount >= 100_000_000 -> "${amount / 100_000_000}억"
+    amount >= 10_000 -> "${amount / 10_000}만"
+    amount >= 1_000 -> "${amount / 1_000}천"
+    else -> "$amount"
+}
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -156,7 +161,18 @@ fun HomeScreen(
         },
         floatingActionButton = {
             FloatingActionButton(
-                onClick = { onNavigateToTransactionEdit(-1L, -1L) },
+                onClick = {
+                    val dateMillis = if (selectedTab == 1 && effectiveCalendarDay != null) {
+                        Calendar.getInstance().apply {
+                            set(selectedMonth.year, selectedMonth.month - 1, effectiveCalendarDay!!)
+                            set(Calendar.HOUR_OF_DAY, 0)
+                            set(Calendar.MINUTE, 0)
+                            set(Calendar.SECOND, 0)
+                            set(Calendar.MILLISECOND, 0)
+                        }.timeInMillis
+                    } else -1L
+                    onNavigateToTransactionEdit(-1L, dateMillis)
+                },
                 containerColor = MaterialTheme.colorScheme.primary
             ) {
                 Icon(
@@ -231,7 +247,6 @@ fun HomeScreen(
 
 @Composable
 private fun SummaryCard(totalIncome: Long, totalExpense: Long, modifier: Modifier = Modifier) {
-    val fmt = NumberFormat.getNumberInstance(Locale.KOREA)
     Card(
         modifier = modifier.padding(vertical = 4.dp, horizontal = 4.dp),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
@@ -245,7 +260,7 @@ private fun SummaryCard(totalIncome: Long, totalExpense: Long, modifier: Modifie
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
                 Text("수입", style = MaterialTheme.typography.labelSmall)
                 Text(
-                    text = "+${fmt.format(totalIncome)}원",
+                    text = "+${formatShortAmount(totalIncome)}원",
                     style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
                     color = Color(0xFFF44336)
                 )
@@ -253,7 +268,7 @@ private fun SummaryCard(totalIncome: Long, totalExpense: Long, modifier: Modifie
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
                 Text("지출", style = MaterialTheme.typography.labelSmall)
                 Text(
-                    text = "-${fmt.format(totalExpense)}원",
+                    text = "-${formatShortAmount(totalExpense)}원",
                     style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
                     color = Color(0xFF2196F3)
                 )
@@ -262,7 +277,7 @@ private fun SummaryCard(totalIncome: Long, totalExpense: Long, modifier: Modifie
                 Text("잔액", style = MaterialTheme.typography.labelSmall)
                 val balance = totalIncome - totalExpense
                 Text(
-                    text = "${if (balance >= 0) "+" else ""}${fmt.format(balance)}원",
+                    text = "${if (balance >= 0) "+" else "-"}${formatShortAmount(Math.abs(balance))}원",
                     style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
                     color = if (balance >= 0) Color(0xFFF44336) else Color(0xFF2196F3)
                 )
