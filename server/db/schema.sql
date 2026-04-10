@@ -120,3 +120,6 @@ ALTER TABLE ledgers ADD COLUMN IF NOT EXISTS invite_expires_at TIMESTAMPTZ;
 CREATE INDEX IF NOT EXISTS idx_ledgers_invite_code
     ON ledgers(invite_code)
     WHERE invite_code IS NOT NULL;
+
+-- Migration: add type column to categories (income | expense, default 'expense')
+ALTER TABLE categories ADD COLUMN IF NOT EXISTS type VARCHAR(10) NOT NULL DEFAULT 'expense';

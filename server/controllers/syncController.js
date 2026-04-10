@@ -35,7 +35,7 @@ async function delta(req, res) {
         [ledgerId, since]
       ),
       pool.query(
-        `SELECT category_id, ledger_id, category_name, color,
+        `SELECT category_id, ledger_id, category_name, color, type,
                 is_deleted, deleted_at, created_at, updated_at
          FROM categories
          WHERE ledger_id = $1 AND updated_at > $2
@@ -70,7 +70,8 @@ async function push(req, res) {
 
     // ── 카테고리 먼저 처리 (거래가 category_id를 참조하므로) ──────────────
     for (const cat of categories) {
-      const { client_id, server_id, category_name, color, is_deleted, updated_at } = cat;
+      const { client_id, server_id, category_name, color, type, is_deleted, updated_at } = cat;
+      const categoryType = (type === 'income' || type === 'expense') ? type : 'expense';
 
       if (is_deleted && server_id) {
         await pool.query(
@@ -84,10 +85,10 @@ async function push(req, res) {
       } else if (!server_id) {
         // 신규
         const r = await pool.query(
-          `INSERT INTO categories (ledger_id, category_name, color)
-           VALUES ($1, $2, $3)
+          `INSERT INTO categories (ledger_id, category_name, color, type)
+           VALUES ($1, $2, $3, $4)
            RETURNING category_id, updated_at`,
-          [ledgerId, category_name, color ?? null]
+          [ledgerId, category_name, color ?? null, categoryType]
         );
         catResults.push({
           client_id,
@@ -105,9 +106,9 @@ async function push(req, res) {
           if (new Date(updated_at) > new Date(existing.rows[0].updated_at)) {
             await pool.query(
               `UPDATE categories
-               SET category_name = $1, color = $2, updated_at = NOW()
-               WHERE category_id = $3`,
-              [category_name, color ?? null, server_id]
+               SET category_name = $1, color = $2, type = $3, updated_at = NOW()
+               WHERE category_id = $4`,
+              [category_name, color ?? null, categoryType, server_id]
             );
           }
         }

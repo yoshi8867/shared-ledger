@@ -2,15 +2,20 @@ const { pool } = require('../db/pool');
 
 const COLOR_REGEX = /^#[0-9A-Fa-f]{6}$/;
 
-// GET /api/ledgers/:ledgerId/categories
+// GET /api/ledgers/:ledgerId/categories?type=income|expense
 async function getCategories(req, res) {
   const { ledgerId } = req.params;
+  const { type } = req.query;
 
   try {
-    const result = await pool.query(
-      `SELECT * FROM categories WHERE ledger_id = $1 AND is_deleted = FALSE ORDER BY created_at ASC`,
-      [ledgerId]
-    );
+    let query = `SELECT * FROM categories WHERE ledger_id = $1 AND is_deleted = FALSE`;
+    const params = [ledgerId];
+    if (type === 'income' || type === 'expense') {
+      query += ` AND type = $2`;
+      params.push(type);
+    }
+    query += ` ORDER BY created_at ASC`;
+    const result = await pool.query(query, params);
     res.json({ categories: result.rows });
   } catch (err) {
     console.error('[getCategories]', err);
@@ -21,7 +26,7 @@ async function getCategories(req, res) {
 // POST /api/ledgers/:ledgerId/categories
 async function createCategory(req, res) {
   const { ledgerId } = req.params;
-  const { category_name, color } = req.body;
+  const { category_name, color, type } = req.body;
 
   if (!category_name || !category_name.trim()) {
     return res.status(400).json({ error: 'category_name은 필수입니다' });
@@ -29,11 +34,12 @@ async function createCategory(req, res) {
   if (color && !COLOR_REGEX.test(color)) {
     return res.status(400).json({ error: 'color는 #RRGGBB 형식이어야 합니다' });
   }
+  const categoryType = (type === 'income' || type === 'expense') ? type : 'expense';
 
   try {
     const result = await pool.query(
-      `INSERT INTO categories (ledger_id, category_name, color) VALUES ($1, $2, $3) RETURNING *`,
-      [ledgerId, category_name.trim(), color || null]
+      `INSERT INTO categories (ledger_id, category_name, color, type) VALUES ($1, $2, $3, $4) RETURNING *`,
+      [ledgerId, category_name.trim(), color || null, categoryType]
     );
     res.status(201).json({ category: result.rows[0] });
   } catch (err) {
@@ -46,7 +52,7 @@ async function createCategory(req, res) {
 async function updateCategory(req, res) {
   const { id } = req.params;
   const userId = req.user.user_id;
-  const { category_name, color } = req.body;
+  const { category_name, color, type } = req.body;
 
   try {
     const catResult = await pool.query(
@@ -73,15 +79,17 @@ async function updateCategory(req, res) {
     if (color && !COLOR_REGEX.test(color)) {
       return res.status(400).json({ error: 'color는 #RRGGBB 형식이어야 합니다' });
     }
+    const categoryType = (type === 'income' || type === 'expense') ? type : null;
 
     const result = await pool.query(
       `UPDATE categories SET
          category_name = COALESCE($1, category_name),
          color         = COALESCE($2, color),
+         type          = COALESCE($3, type),
          updated_at    = NOW()
-       WHERE category_id = $3
+       WHERE category_id = $4
        RETURNING *`,
-      [category_name ? category_name.trim() : null, color || null, id]
+      [category_name ? category_name.trim() : null, color || null, categoryType, id]
     );
     res.json({ category: result.rows[0] });
   } catch (err) {
