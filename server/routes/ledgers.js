@@ -66,7 +66,7 @@ router.post('/join', authMiddleware, async (req, res) => {
 
     await pool.query(
       `INSERT INTO shared_ledgers (ledger_id, shared_with_user_id, permission)
-       VALUES ($1, $2, 'view')
+       VALUES ($1, $2, 'edit')
        ON CONFLICT (ledger_id, shared_with_user_id) DO NOTHING`,
       [ledger.ledger_id, userId]
     );
@@ -114,7 +114,7 @@ router.post('/:id/invite-code', authMiddleware, async (req, res) => {
     for (let i = 0; i < 6; i++) {
       code += chars[Math.floor(Math.random() * chars.length)];
     }
-    const expiresAt = new Date(Date.now() + 5 * 60 * 1000); // 5분
+    const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24시간
 
     await pool.query(
       `UPDATE ledgers SET invite_code = $1, invite_expires_at = $2 WHERE ledger_id = $3`,
