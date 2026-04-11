@@ -24,22 +24,26 @@ class AuthDataStore @Inject constructor(@ApplicationContext private val context:
     private val REFRESH_TOKEN         = stringPreferencesKey("refresh_token")
     private val LEDGER_ID             = longPreferencesKey("ledger_id")
     private val ACTIVE_LEDGER_ID      = longPreferencesKey("active_ledger_id")
-    private val LAST_SYNCED_AT        = stringPreferencesKey("last_synced_at")
     private val SERVER_URL            = stringPreferencesKey("server_url")
     private val SYNC_INTERVAL         = stringPreferencesKey("sync_interval")
     private val NOTIFICATIONS_ENABLED = booleanPreferencesKey("notifications_enabled")
     private val ENABLED_PACKAGES      = stringPreferencesKey("enabled_packages")
     private val LAST_LOGIN_METHOD     = stringPreferencesKey("last_login_method")
 
+    // 장부별 마지막 동기화 시간 키 — "last_synced_at_${ledgerId}"
+    private fun lastSyncedAtKey(ledgerId: Long) = stringPreferencesKey("last_synced_at_$ledgerId")
+
     val accessToken:         Flow<String?> = context.dataStore.data.map { it[ACCESS_TOKEN] }
     val refreshToken:        Flow<String?> = context.dataStore.data.map { it[REFRESH_TOKEN] }
     val ledgerId:            Flow<Long?>   = context.dataStore.data.map { it[LEDGER_ID] }
     val activeLedgerId:      Flow<Long?>   = context.dataStore.data.map { it[ACTIVE_LEDGER_ID] }
-    val lastSyncedAt:        Flow<String?> = context.dataStore.data.map { it[LAST_SYNCED_AT] }
     val serverUrl:           Flow<String>  = context.dataStore.data.map { it[SERVER_URL] ?: ServerUrlProvider.DEFAULT_URL }
     val syncInterval:        Flow<String>  = context.dataStore.data.map { it[SYNC_INTERVAL] ?: "manual" }
     val notificationsEnabled: Flow<Boolean> = context.dataStore.data.map { it[NOTIFICATIONS_ENABLED] ?: true }
     val lastLoginMethod:     Flow<String?> = context.dataStore.data.map { it[LAST_LOGIN_METHOD] }
+
+    fun getLastSyncedAt(ledgerId: Long): Flow<String?> =
+        context.dataStore.data.map { it[lastSyncedAtKey(ledgerId)] }
     val enabledPackages: Flow<Set<String>> = context.dataStore.data.map { prefs ->
         prefs[ENABLED_PACKAGES]
             ?.split(",")
@@ -63,8 +67,8 @@ class AuthDataStore @Inject constructor(@ApplicationContext private val context:
         context.dataStore.edit { it[ACTIVE_LEDGER_ID] = id }
     }
 
-    suspend fun saveLastSyncedAt(isoTimestamp: String) {
-        context.dataStore.edit { it[LAST_SYNCED_AT] = isoTimestamp }
+    suspend fun saveLastSyncedAt(isoTimestamp: String, ledgerId: Long) {
+        context.dataStore.edit { it[lastSyncedAtKey(ledgerId)] = isoTimestamp }
     }
 
     suspend fun saveServerUrl(url: String) {
@@ -80,7 +84,6 @@ class AuthDataStore @Inject constructor(@ApplicationContext private val context:
             prefs.remove(ACCESS_TOKEN)
             prefs.remove(REFRESH_TOKEN)
             prefs.remove(LEDGER_ID)
-            prefs.remove(LAST_SYNCED_AT)
         }
     }
 

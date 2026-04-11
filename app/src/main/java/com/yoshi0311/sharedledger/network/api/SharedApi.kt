@@ -36,22 +36,10 @@ data class OwnLedgerDto(
     @SerializedName("owner_id")    val ownerId: Long
 )
 
-data class UserSearchDto(
-    @SerializedName("user_id") val userId: Long,
-    @SerializedName("email")   val email: String,
-    @SerializedName("name")    val name: String
-)
-
 // ── Requests ─────────────────────────────────────────────────────────────────
 
 data class LedgerUpdateRequest(
     @SerializedName("ledger_name") val ledgerName: String
-)
-
-data class InviteRequest(
-    @SerializedName("ledger_id")  val ledgerId: Long,
-    @SerializedName("email")      val email: String,
-    @SerializedName("permission") val permission: String = "view"
 )
 
 data class UpdatePermissionRequest(
@@ -90,10 +78,6 @@ data class JoinLedgerResponse(
     @SerializedName("message")   val message: String
 )
 
-data class UserSearchResponse(
-    @SerializedName("user") val user: UserSearchDto
-)
-
 // ── Retrofit 인터페이스 ────────────────────────────────────────────────────────
 
 interface SharedApi {
@@ -101,20 +85,16 @@ interface SharedApi {
     @GET("api/shared-ledgers")
     suspend fun getSharedUsers(@Query("ledger_id") ledgerId: Long): SharedUsersResponse
 
-    /** 이메일로 사용자 초대 */
-    @POST("api/shared-ledgers")
-    suspend fun invite(@Body request: InviteRequest): Any
-
     /** 권한 변경 */
     @PATCH("api/shared-ledgers/{id}")
     suspend fun updatePermission(
         @Path("id") id: Long,
         @Body request: UpdatePermissionRequest
-    ): Any
+    ): Unit
 
     /** 공유 해제 */
     @DELETE("api/shared-ledgers/{id}")
-    suspend fun revokeAccess(@Path("id") id: Long): Any
+    suspend fun revokeAccess(@Path("id") id: Long): Unit
 
     /** 나와 공유된 장부 목록 */
     @GET("api/ledgers/shared")
@@ -123,10 +103,6 @@ interface SharedApi {
     /** 내가 소유한 장부 목록 */
     @GET("api/ledgers")
     suspend fun getMyLedgers(): OwnLedgersResponse
-
-    /** 이메일로 사용자 검색 */
-    @GET("api/users/search")
-    suspend fun searchUser(@Query("email") email: String): UserSearchResponse
 
     /** 장부 단건 조회 */
     @GET("api/ledgers/{id}")

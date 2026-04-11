@@ -3,15 +3,20 @@ package com.yoshi0311.sharedledger.ui.screens.shared
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.yoshi0311.sharedledger.data.repository.AuthRepository
 import com.yoshi0311.sharedledger.data.repository.SharedRepository
 import com.yoshi0311.sharedledger.network.api.SharedLedgerDto
 import com.yoshi0311.sharedledger.network.api.SharedUserDto
-import com.yoshi0311.sharedledger.network.api.UserSearchDto
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.firstOrNull
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import retrofit2.HttpException
 import javax.inject.Inject
 
 data class SharedLedgerUiState(
@@ -27,31 +32,35 @@ sealed class SharedActionState {
     data class Error(val message: String) : SharedActionState()
 }
 
+// 장부 선택 드롭다운용 아이템
+data class LedgerSelectItem(
+    val ledgerId: Long,
+    val ledgerName: String,
+    val isOwner: Boolean
+)
+
 @HiltViewModel
 class SharedLedgerViewModel @Inject constructor(
     private val sharedRepo: SharedRepository,
+    private val authRepo: AuthRepository,
     savedStateHandle: SavedStateHandle
 ) : ViewModel() {
 
     val ledgerId: Long = savedStateHandle.get<Long>("ledgerId") ?: -1L
 
-    // 내 장부 이름
     private val _ledgerName = MutableStateFlow("")
     val ledgerName: StateFlow<String> = _ledgerName.asStateFlow()
 
-    // 이 장부의 소유자인지 여부 (getSharedUsers 성공 여부로 판단)
+    // getSharedUsers 성공(200) → 소유자, 403 → 비소유자, 기타 에러 → 불명(false 유지)
     private val _isOwner = MutableStateFlow(false)
     val isOwner: StateFlow<Boolean> = _isOwner.asStateFlow()
 
-    // 이 장부를 공유 중인 사용자 목록
     private val _uiState = MutableStateFlow(SharedLedgerUiState())
     val uiState: StateFlow<SharedLedgerUiState> = _uiState.asStateFlow()
 
-    // 나와 공유된 장부 목록 (다른 사람이 공유해준 장부)
     private val _sharedWithMe = MutableStateFlow<List<SharedLedgerDto>>(emptyList())
     val sharedWithMe: StateFlow<List<SharedLedgerDto>> = _sharedWithMe.asStateFlow()
 
-    // 생성된 초대 코드
     private val _inviteCode = MutableStateFlow<String?>(null)
     val inviteCode: StateFlow<String?> = _inviteCode.asStateFlow()
 
@@ -61,11 +70,14 @@ class SharedLedgerViewModel @Inject constructor(
     private val _actionState = MutableStateFlow<SharedActionState>(SharedActionState.Idle)
     val actionState: StateFlow<SharedActionState> = _actionState.asStateFlow()
 
-    private val _searchResult = MutableStateFlow<UserSearchDto?>(null)
-    val searchResult: StateFlow<UserSearchDto?> = _searchResult.asStateFlow()
+    // ── 장부 선택 ──────────────────────────────────────────────────────────────
+    private val _allLedgers = MutableStateFlow<List<LedgerSelectItem>>(emptyList())
+    val allLedgers: StateFlow<List<LedgerSelectItem>> = _allLedgers.asStateFlow()
 
-    private val _searchError = MutableStateFlow<String?>(null)
-    val searchError: StateFlow<String?> = _searchError.asStateFlow()
+    // 현재 '기록 대상' 활성 장부 ID
+    val activeLedgerId: StateFlow<Long> = authRepo.activeLedgerId
+        .map { it ?: authRepo.ledgerId.firstOrNull() ?: -1L }
+        .stateIn(viewModelScope, SharingStarted.Eagerly, -1L)
 
     init {
         if (ledgerId != -1L) {
@@ -73,6 +85,7 @@ class SharedLedgerViewModel @Inject constructor(
             loadSharedUsers()
         }
         loadSharedWithMe()
+        loadAllLedgers()
     }
 
     private fun loadLedgerInfo() {
@@ -82,6 +95,24 @@ class SharedLedgerViewModel @Inject constructor(
         }
     }
 
+    private fun loadAllLedgers() {
+        viewModelScope.launch {
+            val own    = sharedRepo.getMyLedgers().getOrElse { emptyList() }
+            val shared = sharedRepo.getSharedLedgers().getOrElse { emptyList() }
+            _allLedgers.value =
+                own.map { LedgerSelectItem(it.ledgerId, it.ledgerName, isOwner = true) } +
+                shared.map { LedgerSelectItem(it.ledgerId, it.ledgerName, isOwner = false) }
+        }
+    }
+
+    fun switchActiveLedger(ledgerId: Long) {
+        viewModelScope.launch {
+            authRepo.setActiveLedgerId(ledgerId)
+        }
+    }
+
+    // ── 공유 관리 ──────────────────────────────────────────────────────────────
+
     fun loadSharedUsers() {
         viewModelScope.launch {
             _uiState.value = _uiState.value.copy(isLoading = true, errorMessage = null)
@@ -90,9 +121,16 @@ class SharedLedgerViewModel @Inject constructor(
                     _isOwner.value = true
                     _uiState.value = SharedLedgerUiState(sharedUsers = users, isLoading = false)
                 }
-                .onFailure {
-                    _isOwner.value = false
-                    _uiState.value = SharedLedgerUiState(isLoading = false)
+                .onFailure { e ->
+                    if (e is HttpException && e.code() == 403) {
+                        _isOwner.value = false
+                        _uiState.value = SharedLedgerUiState(isLoading = false)
+                    } else {
+                        _uiState.value = SharedLedgerUiState(
+                            isLoading = false,
+                            errorMessage = "공유 사용자 목록을 불러오지 못했습니다"
+                        )
+                    }
                 }
         }
     }
@@ -115,37 +153,6 @@ class SharedLedgerViewModel @Inject constructor(
                 }
                 .onFailure { e ->
                     _actionState.value = SharedActionState.Error(e.message ?: "이름 변경 실패")
-                }
-        }
-    }
-
-    fun searchUser(email: String) {
-        _searchResult.value = null
-        _searchError.value = null
-        viewModelScope.launch {
-            sharedRepo.searchUser(email)
-                .onSuccess { _searchResult.value = it }
-                .onFailure { _searchError.value = it.message ?: "사용자를 찾을 수 없습니다" }
-        }
-    }
-
-    fun clearSearchResult() {
-        _searchResult.value = null
-        _searchError.value = null
-    }
-
-    fun invite(email: String, permission: String) {
-        if (ledgerId == -1L) return
-        viewModelScope.launch {
-            _actionState.value = SharedActionState.Loading
-            sharedRepo.invite(ledgerId, email, permission)
-                .onSuccess {
-                    _actionState.value = SharedActionState.Success
-                    clearSearchResult()
-                    loadSharedUsers()
-                }
-                .onFailure { e ->
-                    _actionState.value = SharedActionState.Error(e.message ?: "초대 실패")
                 }
         }
     }
@@ -178,6 +185,21 @@ class SharedLedgerViewModel @Inject constructor(
         }
     }
 
+    fun leaveSharedLedger(sharedLedgerId: Long) {
+        viewModelScope.launch {
+            _actionState.value = SharedActionState.Loading
+            sharedRepo.revokeAccess(sharedLedgerId)
+                .onSuccess {
+                    _actionState.value = SharedActionState.Success
+                    loadSharedWithMe()
+                    loadAllLedgers()
+                }
+                .onFailure { e ->
+                    _actionState.value = SharedActionState.Error(e.message ?: "나가기 실패")
+                }
+        }
+    }
+
     fun generateInviteCode() {
         if (ledgerId == -1L) return
         viewModelScope.launch {
@@ -202,6 +224,7 @@ class SharedLedgerViewModel @Inject constructor(
                 .onSuccess {
                     _actionState.value = SharedActionState.Success
                     loadSharedWithMe()
+                    loadAllLedgers()
                 }
                 .onFailure { e ->
                     _actionState.value = SharedActionState.Error(e.message ?: "참가 실패")

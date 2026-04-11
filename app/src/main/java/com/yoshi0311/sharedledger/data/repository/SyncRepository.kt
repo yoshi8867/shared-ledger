@@ -66,6 +66,7 @@ class SyncRepository @Inject constructor(
         if (pendingCats.isEmpty() && pendingTxs.isEmpty()) return
 
         val request = PushRequest(
+            ledgerId = ledgerId,
             categories = pendingCats.map { cat ->
                 PushCategoryDto(
                     clientId     = cat.id,
@@ -110,8 +111,8 @@ class SyncRepository @Inject constructor(
     // ── Pull: 서버 delta → 로컬 DB ────────────────────────────────────────────
 
     private suspend fun pullDelta(ledgerId: Long) {
-        val since = authDataStore.lastSyncedAt.firstOrNull() ?: "1970-01-01T00:00:00.000Z"
-        val delta = syncApi.getDelta(since)
+        val since = authDataStore.getLastSyncedAt(ledgerId).firstOrNull() ?: "1970-01-01T00:00:00.000Z"
+        val delta = syncApi.getDelta(since, ledgerId)
 
         // 카테고리를 먼저 적용 (트랜잭션이 category_id에 의존)
         for (cat in delta.categories) {
@@ -203,6 +204,6 @@ class SyncRepository @Inject constructor(
             }
         }
 
-        authDataStore.saveLastSyncedAt(delta.serverTime)
+        authDataStore.saveLastSyncedAt(delta.serverTime, ledgerId)
     }
 }

@@ -44,6 +44,7 @@ data class ServerCategoryDto(
 // ── Push 요청/응답 ─────────────────────────────────────────────────────────────
 
 data class PushRequest(
+    @SerializedName("ledger_id") val ledgerId: Long,
     val transactions: List<PushTransactionDto>,
     val categories:   List<PushCategoryDto>
 )
@@ -91,7 +92,10 @@ interface SyncApi {
 
     /** 마지막 동기화 이후 변경된 데이터 조회 */
     @GET("api/sync/delta")
-    suspend fun getDelta(@Query("since") since: String): DeltaResponse
+    suspend fun getDelta(
+        @Query("since") since: String,
+        @Query("ledger_id") ledgerId: Long
+    ): DeltaResponse
 
     /** 로컬 변경사항 서버에 업로드 */
     @POST("api/sync/push")

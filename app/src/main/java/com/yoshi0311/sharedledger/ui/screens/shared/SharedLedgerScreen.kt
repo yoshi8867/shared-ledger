@@ -16,13 +16,13 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.ContentCopy
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Refresh
-import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Badge
 import androidx.compose.material3.Button
@@ -74,21 +74,20 @@ fun SharedLedgerScreen(
     val isOwner          by viewModel.isOwner.collectAsStateWithLifecycle()
     val uiState          by viewModel.uiState.collectAsStateWithLifecycle()
     val actionState      by viewModel.actionState.collectAsStateWithLifecycle()
-    val searchResult     by viewModel.searchResult.collectAsStateWithLifecycle()
-    val searchError      by viewModel.searchError.collectAsStateWithLifecycle()
     val sharedWithMe     by viewModel.sharedWithMe.collectAsStateWithLifecycle()
     val inviteCode       by viewModel.inviteCode.collectAsStateWithLifecycle()
-    val inviteCodeExpiry by viewModel.inviteCodeExpiry.collectAsStateWithLifecycle()
+    val allLedgers       by viewModel.allLedgers.collectAsStateWithLifecycle()
+    val activeLedgerId   by viewModel.activeLedgerId.collectAsStateWithLifecycle()
+
+    val activeLedgerName = allLedgers.find { it.ledgerId == activeLedgerId }?.ledgerName ?: "장부 선택"
 
     val snackbarHostState = remember { SnackbarHostState() }
 
-    var searchEmail      by rememberSaveable { mutableStateOf("") }
-    var invitePermission by rememberSaveable { mutableStateOf("view") }
-    var showInviteDialog by remember { mutableStateOf(false) }
-    var isEditingName    by remember { mutableStateOf(false) }
-    var editNameValue    by rememberSaveable(ledgerName) { mutableStateOf(ledgerName) }
-    var joinCode         by rememberSaveable { mutableStateOf("") }
-    var showJoinDialog   by remember { mutableStateOf(false) }
+    var showLedgerMenu by remember { mutableStateOf(false) }
+    var isEditingName by remember { mutableStateOf(false) }
+    var editNameValue by rememberSaveable(ledgerName) { mutableStateOf(ledgerName) }
+    var joinCode      by rememberSaveable { mutableStateOf("") }
+    var showJoinDialog by remember { mutableStateOf(false) }
 
     LaunchedEffect(actionState) {
         when (val s = actionState) {
@@ -127,6 +126,91 @@ fun SharedLedgerScreen(
                 .padding(horizontal = 16.dp),
             verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
+
+            // ── 기록 장부 선택 ────────────────────────────────────────────────
+            item {
+                Spacer(Modifier.height(8.dp))
+                SectionHeader("기록 장부")
+                Spacer(Modifier.height(8.dp))
+
+                Box {
+                    Card(
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = CardDefaults.cardColors(
+                            containerColor = MaterialTheme.colorScheme.secondaryContainer
+                        ),
+                        onClick = { showLedgerMenu = true }
+                    ) {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 16.dp, vertical = 12.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.SpaceBetween
+                        ) {
+                            Column(modifier = Modifier.weight(1f)) {
+                                Text(
+                                    text = activeLedgerName,
+                                    style = MaterialTheme.typography.titleSmall,
+                                    fontWeight = FontWeight.Bold
+                                )
+                                Text(
+                                    text = "새 데이터가 이 장부에 기록됩니다",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.onSecondaryContainer.copy(alpha = 0.7f)
+                                )
+                            }
+                            Icon(
+                                imageVector = Icons.Filled.ArrowDropDown,
+                                contentDescription = "장부 선택",
+                                tint = MaterialTheme.colorScheme.onSecondaryContainer
+                            )
+                        }
+                    }
+                    DropdownMenu(
+                        expanded = showLedgerMenu,
+                        onDismissRequest = { showLedgerMenu = false }
+                    ) {
+                        if (allLedgers.isEmpty()) {
+                            DropdownMenuItem(
+                                text = { Text("장부 없음", color = MaterialTheme.colorScheme.onSurfaceVariant) },
+                                onClick = { showLedgerMenu = false }
+                            )
+                        } else {
+                            allLedgers.forEach { ledger ->
+                                DropdownMenuItem(
+                                    text = {
+                                        Row(
+                                            verticalAlignment = Alignment.CenterVertically,
+                                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                                        ) {
+                                            Text(ledger.ledgerName)
+                                            if (!ledger.isOwner) {
+                                                Text(
+                                                    "(공유)",
+                                                    style = MaterialTheme.typography.labelSmall,
+                                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                                )
+                                            }
+                                            if (ledger.ledgerId == activeLedgerId) {
+                                                Icon(
+                                                    Icons.Filled.Check,
+                                                    contentDescription = null,
+                                                    tint = MaterialTheme.colorScheme.primary
+                                                )
+                                            }
+                                        }
+                                    },
+                                    onClick = {
+                                        viewModel.switchActiveLedger(ledger.ledgerId)
+                                        showLedgerMenu = false
+                                    }
+                                )
+                            }
+                        }
+                    }
+                }
+            }
 
             // ── 내 장부 ──────────────────────────────────────────────────────
             item {
@@ -209,58 +293,7 @@ fun SharedLedgerScreen(
                     SectionHeader("공유 중인 사용자")
                     Spacer(Modifier.height(8.dp))
 
-                    // 이메일 검색 + 초대
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(8.dp)
-                    ) {
-                        OutlinedTextField(
-                            value = searchEmail,
-                            onValueChange = { searchEmail = it; viewModel.clearSearchResult() },
-                            label = { Text("이메일로 검색") },
-                            modifier = Modifier.weight(1f),
-                            singleLine = true
-                        )
-                        IconButton(
-                            onClick = { if (searchEmail.isNotBlank()) viewModel.searchUser(searchEmail) }
-                        ) {
-                            Icon(Icons.Filled.Search, contentDescription = "검색")
-                        }
-                    }
-
-                    if (searchError != null) {
-                        Text(
-                            searchError!!,
-                            color = MaterialTheme.colorScheme.error,
-                            style = MaterialTheme.typography.bodySmall,
-                            modifier = Modifier.padding(top = 4.dp)
-                        )
-                    }
-
-                    searchResult?.let { user ->
-                        Card(
-                            modifier = Modifier.fillMaxWidth().padding(top = 8.dp),
-                            colors = CardDefaults.cardColors(
-                                containerColor = MaterialTheme.colorScheme.secondaryContainer
-                            )
-                        ) {
-                            Row(
-                                modifier = Modifier.fillMaxWidth().padding(12.dp),
-                                verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.SpaceBetween
-                            ) {
-                                Column {
-                                    Text(user.name, style = MaterialTheme.typography.bodyMedium,
-                                        fontWeight = FontWeight.Medium)
-                                    Text(user.email, style = MaterialTheme.typography.bodySmall)
-                                }
-                                Button(onClick = { showInviteDialog = true }) { Text("초대") }
-                            }
-                        }
-                    }
-
                     // ── 초대 코드 ────────────────────────────────────────────
-                    Spacer(Modifier.height(12.dp))
                     Text(
                         "초대 코드",
                         style = MaterialTheme.typography.labelMedium,
@@ -289,7 +322,7 @@ fun SharedLedgerScreen(
                                     textAlign = TextAlign.Center
                                 )
                                 Text(
-                                    text = "5분 동안 유효",
+                                    text = "24시간 동안 유효",
                                     style = MaterialTheme.typography.bodySmall,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                                     modifier = Modifier.padding(top = 4.dp)
@@ -321,6 +354,7 @@ fun SharedLedgerScreen(
                             }
                         }
                     }
+                    Spacer(Modifier.height(8.dp))
                 }
 
                 // 공유 중인 사용자 목록
@@ -378,43 +412,14 @@ fun SharedLedgerScreen(
             }
 
             items(sharedWithMe) { item ->
-                SharedWithMeItem(item)
+                SharedWithMeItem(
+                    item = item,
+                    onLeave = { viewModel.leaveSharedLedger(item.sharedLedgerId) }
+                )
             }
 
             item { Spacer(Modifier.height(16.dp)) }
         }
-    }
-
-    // 초대 권한 선택 다이얼로그
-    if (showInviteDialog) {
-        AlertDialog(
-            onDismissRequest = { showInviteDialog = false },
-            title = { Text("권한 설정") },
-            text = {
-                Column {
-                    Text("${searchResult?.name}(${searchResult?.email})에게 어떤 권한을 부여할까요?")
-                    Spacer(Modifier.height(12.dp))
-                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                        listOf("view" to "조회", "edit" to "편집").forEach { (value, label) ->
-                            if (invitePermission == value) {
-                                Button(onClick = { invitePermission = value }) { Text(label) }
-                            } else {
-                                OutlinedButton(onClick = { invitePermission = value }) { Text(label) }
-                            }
-                        }
-                    }
-                }
-            },
-            confirmButton = {
-                TextButton(onClick = {
-                    searchResult?.let { viewModel.invite(it.email, invitePermission) }
-                    showInviteDialog = false
-                }) { Text("초대") }
-            },
-            dismissButton = {
-                TextButton(onClick = { showInviteDialog = false }) { Text("취소") }
-            }
-        )
     }
 
     // 코드로 참가 다이얼로그
@@ -461,7 +466,12 @@ private fun SectionHeader(title: String) {
 }
 
 @Composable
-private fun SharedWithMeItem(item: SharedLedgerDto) {
+private fun SharedWithMeItem(
+    item: SharedLedgerDto,
+    onLeave: () -> Unit
+) {
+    var showConfirm by remember { mutableStateOf(false) }
+
     Card(
         modifier = Modifier.fillMaxWidth(),
         colors = CardDefaults.cardColors(
@@ -503,7 +513,28 @@ private fun SharedWithMeItem(item: SharedLedgerDto) {
                     modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
                 )
             }
+            IconButton(onClick = { showConfirm = true }) {
+                Icon(
+                    Icons.Filled.Delete,
+                    contentDescription = "나가기",
+                    tint = MaterialTheme.colorScheme.error
+                )
+            }
         }
+    }
+
+    if (showConfirm) {
+        AlertDialog(
+            onDismissRequest = { showConfirm = false },
+            title = { Text("장부 나가기") },
+            text = { Text("'${item.ledgerName}' 장부에서 나가시겠습니까?") },
+            confirmButton = {
+                TextButton(onClick = { onLeave(); showConfirm = false }) { Text("나가기") }
+            },
+            dismissButton = {
+                TextButton(onClick = { showConfirm = false }) { Text("취소") }
+            }
+        )
     }
 }
 

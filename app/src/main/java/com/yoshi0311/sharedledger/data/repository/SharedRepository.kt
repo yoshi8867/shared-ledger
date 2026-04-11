@@ -1,7 +1,6 @@
 package com.yoshi0311.sharedledger.data.repository
 
 import com.yoshi0311.sharedledger.network.api.InviteCodeResponse
-import com.yoshi0311.sharedledger.network.api.InviteRequest
 import com.yoshi0311.sharedledger.network.api.JoinLedgerRequest
 import com.yoshi0311.sharedledger.network.api.JoinLedgerResponse
 import com.yoshi0311.sharedledger.network.api.LedgerUpdateRequest
@@ -10,7 +9,6 @@ import com.yoshi0311.sharedledger.network.api.SharedApi
 import com.yoshi0311.sharedledger.network.api.SharedLedgerDto
 import com.yoshi0311.sharedledger.network.api.SharedUserDto
 import com.yoshi0311.sharedledger.network.api.UpdatePermissionRequest
-import com.yoshi0311.sharedledger.network.api.UserSearchDto
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -21,23 +19,17 @@ class SharedRepository @Inject constructor(
     suspend fun getSharedUsers(ledgerId: Long): Result<List<SharedUserDto>> =
         runCatching { api.getSharedUsers(ledgerId).sharedUsers }
 
-    suspend fun invite(ledgerId: Long, email: String, permission: String): Result<Unit> =
-        runCatching { api.invite(InviteRequest(ledgerId, email, permission)); Unit }
-
     suspend fun updatePermission(sharedLedgerId: Long, permission: String): Result<Unit> =
-        runCatching { api.updatePermission(sharedLedgerId, UpdatePermissionRequest(permission)); Unit }
+        runCatching { api.updatePermission(sharedLedgerId, UpdatePermissionRequest(permission)) }
 
     suspend fun revokeAccess(sharedLedgerId: Long): Result<Unit> =
-        runCatching { api.revokeAccess(sharedLedgerId); Unit }
+        runCatching { api.revokeAccess(sharedLedgerId) }
 
     suspend fun getSharedLedgers(): Result<List<SharedLedgerDto>> =
         runCatching { api.getSharedLedgers().ledgers }
 
     suspend fun getMyLedgers(): Result<List<OwnLedgerDto>> =
         runCatching { api.getMyLedgers().ledgers }
-
-    suspend fun searchUser(email: String): Result<UserSearchDto> =
-        runCatching { api.searchUser(email).user }
 
     suspend fun getLedger(ledgerId: Long): Result<OwnLedgerDto> =
         runCatching { api.getLedger(ledgerId).ledger }
