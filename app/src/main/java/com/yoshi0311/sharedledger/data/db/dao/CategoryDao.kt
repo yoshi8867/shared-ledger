@@ -37,8 +37,8 @@ interface CategoryDao {
     @Query("SELECT * FROM categories WHERE ledger_id = :ledgerId AND sync_status = 'pending'")
     suspend fun getPendingCategories(ledgerId: Long): List<CategoryEntity>
 
-    @Query("SELECT * FROM categories WHERE server_id = :serverId LIMIT 1")
-    suspend fun getByServerId(serverId: Long): CategoryEntity?
+    @Query("SELECT * FROM categories WHERE server_id = :serverId AND ledger_id = :ledgerId LIMIT 1")
+    suspend fun getByServerId(serverId: Long, ledgerId: Long): CategoryEntity?
 
     @Query("SELECT * FROM categories WHERE id = :id LIMIT 1")
     suspend fun getByIdSync(id: Long): CategoryEntity?

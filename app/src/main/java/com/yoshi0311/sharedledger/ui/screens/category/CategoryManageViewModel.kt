@@ -66,22 +66,14 @@ class CategoryManageViewModel @Inject constructor(
 
     fun updateCategory(id: Long, name: String, colorHex: String) {
         viewModelScope.launch {
-            val ledgerId = authRepository.activeLedgerId.stateIn(viewModelScope).value
-                ?: return@launch
-            val category = CategoryEntity(
-                id = id,
-                ledgerId = ledgerId,
-                name = name,
-                color = colorHex,
-                type = _selectedType.value,
-                syncStatus = "pending",
-                isDeleted = false,
-                deletedAt = null,
-                serverId = null,
-                createdAt = Date(),
-                updatedAt = Date()
+            val existing = categoryRepository.getByIdSync(id) ?: return@launch
+            categoryRepository.update(
+                existing.copy(
+                    name = name,
+                    color = colorHex,
+                    updatedAt = Date()
+                )
             )
-            categoryRepository.update(category)
         }
     }
 

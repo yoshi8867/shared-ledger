@@ -43,8 +43,8 @@ interface TransactionDao {
     @Query("SELECT * FROM transactions WHERE ledger_id = :ledgerId AND sync_status = 'pending'")
     suspend fun getPendingTransactions(ledgerId: Long): List<TransactionEntity>
 
-    @Query("SELECT * FROM transactions WHERE server_id = :serverId LIMIT 1")
-    suspend fun getByServerId(serverId: Long): TransactionEntity?
+    @Query("SELECT * FROM transactions WHERE server_id = :serverId AND ledger_id = :ledgerId LIMIT 1")
+    suspend fun getByServerId(serverId: Long, ledgerId: Long): TransactionEntity?
 
     /** push 성공 후 server_id · synced_at · sync_status 갱신 */
     @Query("UPDATE transactions SET server_id = :serverId, sync_status = 'synced', synced_at = :syncedAt, updated_at = :syncedAt WHERE id = :id")

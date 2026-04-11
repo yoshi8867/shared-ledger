@@ -117,7 +117,7 @@ class SyncRepository @Inject constructor(
         // 카테고리를 먼저 적용 (트랜잭션이 category_id에 의존)
         for (cat in delta.categories) {
             val serverDate = parseIso(cat.updatedAt)
-            val existing   = categoryDao.getByServerId(cat.categoryId)
+            val existing   = categoryDao.getByServerId(cat.categoryId, ledgerId)
 
             if (cat.isDeleted) {
                 existing?.let { categoryDao.softDeleteFromServer(it.id, serverDate) }
@@ -158,7 +158,7 @@ class SyncRepository @Inject constructor(
         // 거래 내역 적용
         for (tx in delta.transactions) {
             val serverDate = parseIso(tx.updatedAt)
-            val existing   = transactionDao.getByServerId(tx.transactionId)
+            val existing   = transactionDao.getByServerId(tx.transactionId, ledgerId)
 
             if (tx.isDeleted) {
                 existing?.let { transactionDao.softDeleteFromServer(it.id, serverDate) }
@@ -167,7 +167,7 @@ class SyncRepository @Inject constructor(
 
             // 서버의 categoryId(serverId) → 로컬 DB의 category row id
             val localCatId = tx.categoryId?.let { catServerId ->
-                categoryDao.getByServerId(catServerId)?.id
+                categoryDao.getByServerId(catServerId, ledgerId)?.id
             }
 
             if (existing == null) {

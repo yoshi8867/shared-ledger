@@ -19,6 +19,9 @@ class CategoryRepository(private val dao: CategoryDao) {
     suspend fun update(category: CategoryEntity) =
         dao.update(category.copy(syncStatus = "pending"))
 
+    suspend fun getByIdSync(id: Long): CategoryEntity? =
+        dao.getByIdSync(id)
+
     suspend fun softDelete(id: Long) =
         dao.softDelete(id, Date())
 }
