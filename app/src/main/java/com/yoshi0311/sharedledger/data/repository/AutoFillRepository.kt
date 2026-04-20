@@ -77,7 +77,7 @@ class AutoFillRepository @Inject constructor(
         description: String,
         categoryId: Long? = null
     ) {
-        val ledgerId = authRepo.ledgerId.firstOrNull() ?: 1L
+        val ledgerId = authRepo.activeLedgerId.firstOrNull() ?: authRepo.ledgerId.firstOrNull() ?: 1L
         transactionRepo.insert(
             TransactionEntity(
                 ledgerId    = ledgerId,
