@@ -154,28 +154,33 @@ class HomeViewModel @Inject constructor(
 
     private var syncJob: Job? = null
 
-    fun sync() {
+    init {
+        sync(silent = true)
+    }
+
+    fun sync(silent: Boolean = false) {
         if (syncJob?.isActive == true) return
         syncJob = viewModelScope.launch {
-            _syncState.value = SyncState.Loading
+            if (!silent) _syncState.value = SyncState.Loading
             while (isActive) {
                 val ledgerId = currentLedgerId.value
                 val result = syncRepo.sync(ledgerId)
                 when {
                     result.isSuccess -> {
-                        _syncState.value = SyncState.Success
+                        if (!silent) _syncState.value = SyncState.Success
                         break
                     }
                     result.exceptionOrNull() is IOException -> {
-                        // 네트워크/타임아웃 오류 → 로딩 유지, 60초 후 재시도
+                        // 네트워크/타임아웃 오류 → 60초 후 재시도
                         delay(60_000L)
                     }
                     else -> {
                         val e = result.exceptionOrNull()
-                        _syncState.value = if (e is HttpException && e.code() == 401)
-                            SyncState.AuthExpired
-                        else
-                            SyncState.Error(e?.message ?: "동기화 실패")
+                        if (e is HttpException && e.code() == 401) {
+                            _syncState.value = SyncState.AuthExpired
+                        } else if (!silent) {
+                            _syncState.value = SyncState.Error(e?.message ?: "동기화 실패")
+                        }
                         break
                     }
                 }
