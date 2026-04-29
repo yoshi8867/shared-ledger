@@ -162,7 +162,11 @@ async function refresh(req, res) {
       return res.status(401).json({ error: '사용자를 찾을 수 없습니다' });
     }
 
-    res.json({ access_token: signAccessToken(result.rows[0]) });
+    const user = result.rows[0];
+    res.json({
+      access_token: signAccessToken(user),
+      refresh_token: signRefreshToken(user),
+    });
   } catch (err) {
     if (err.name === 'JsonWebTokenError' || err.name === 'TokenExpiredError') {
       return res.status(401).json({ error: 'refresh token이 만료되었거나 유효하지 않습니다' });
