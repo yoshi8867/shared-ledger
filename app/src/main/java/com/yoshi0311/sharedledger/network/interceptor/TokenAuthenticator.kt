@@ -9,6 +9,7 @@ import okhttp3.Authenticator
 import okhttp3.Request
 import okhttp3.Response
 import okhttp3.Route
+import retrofit2.HttpException
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -30,7 +31,11 @@ class TokenAuthenticator @Inject constructor(
                 val res = authApi.refresh(RefreshRequest(refreshToken))
                 authDataStore.saveTokens(res.accessToken, res.refreshToken)
                 res.accessToken
-            }.getOrNull()
+            }.getOrElse { e ->
+                // refresh 자체가 HTTP 오류(401 등) → 토큰 무효, 저장 토큰 클리어
+                if (e is HttpException) authDataStore.clearTokens()
+                null
+            }
         } ?: return null
 
         return response.request.newBuilder()

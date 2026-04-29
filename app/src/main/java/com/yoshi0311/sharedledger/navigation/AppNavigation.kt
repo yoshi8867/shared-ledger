@@ -77,6 +77,11 @@ fun AppNavigation(
                 },
                 onNavigateToAutoFill = {
                     navController.navigate(Routes.AutoFill.route)
+                },
+                onForceLogout = {
+                    navController.navigate(Routes.Login.route) {
+                        popUpTo(0) { inclusive = true }
+                    }
                 }
             )
         }

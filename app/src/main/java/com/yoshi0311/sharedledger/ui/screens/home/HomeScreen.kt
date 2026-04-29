@@ -61,6 +61,7 @@ fun HomeScreen(
     onNavigateToSharedLedger: (ledgerId: Long) -> Unit = {},
     onNavigateToSettings: () -> Unit = {},
     onNavigateToAutoFill: () -> Unit = {},
+    onForceLogout: () -> Unit = {},
     viewModel: HomeViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
@@ -82,6 +83,10 @@ fun HomeScreen(
             is SyncState.Error -> {
                 snackbarHostState.showSnackbar("동기화 실패: ${s.message}")
                 viewModel.resetSyncState()
+            }
+            is SyncState.AuthExpired -> {
+                viewModel.resetSyncState()
+                onForceLogout()
             }
             else -> Unit
         }

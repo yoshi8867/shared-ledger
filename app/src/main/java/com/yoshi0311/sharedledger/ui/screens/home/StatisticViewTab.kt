@@ -215,8 +215,9 @@ fun StatisticViewTab(
             }
 
             // 카테고리별 바 차트
+            val activeTotal = activeStats.sumOf { it.amount }
             Text(
-                text = "카테고리별 내역",
+                text = "카테고리별 내역 (총합: ${fmt.format(activeTotal)}원)",
                 style = MaterialTheme.typography.titleSmall,
                 modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
             )

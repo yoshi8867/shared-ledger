@@ -29,13 +29,15 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import java.io.IOException
+import retrofit2.HttpException
 import java.util.Calendar
 import javax.inject.Inject
 
 sealed class SyncState {
-    object Idle    : SyncState()
-    object Loading : SyncState()
-    object Success : SyncState()
+    object Idle        : SyncState()
+    object Loading     : SyncState()
+    object Success     : SyncState()
+    object AuthExpired : SyncState()
     data class Error(val message: String) : SyncState()
 }
 
@@ -169,10 +171,11 @@ class HomeViewModel @Inject constructor(
                         delay(60_000L)
                     }
                     else -> {
-                        // API 오류(인증 실패 등) → 즉시 에러
-                        _syncState.value = SyncState.Error(
-                            result.exceptionOrNull()?.message ?: "동기화 실패"
-                        )
+                        val e = result.exceptionOrNull()
+                        _syncState.value = if (e is HttpException && e.code() == 401)
+                            SyncState.AuthExpired
+                        else
+                            SyncState.Error(e?.message ?: "동기화 실패")
                         break
                     }
                 }
