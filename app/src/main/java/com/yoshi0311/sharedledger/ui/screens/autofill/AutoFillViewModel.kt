@@ -56,8 +56,7 @@ class AutoFillViewModel @Inject constructor(
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptySet())
 
     @OptIn(ExperimentalCoroutinesApi::class)
-    val categories: StateFlow<List<CategoryEntity>> = authRepo.activeLedgerId
-        .map { it ?: authRepo.ledgerId.firstOrNull() ?: 1L }
+    val categories: StateFlow<List<CategoryEntity>> = authRepo.currentLedgerIdFlow
         .flatMapLatest { ledgerId -> categoryRepo.getByLedgerId(ledgerId) }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
 
@@ -91,10 +90,10 @@ class AutoFillViewModel @Inject constructor(
         }
     }
 
-    fun addCategory(name: String, color: String) {
+    fun addCategory(name: String, color: String, type: String) {
         viewModelScope.launch {
-            val ledgerId = authRepo.ledgerId.firstOrNull() ?: 1L
-            categoryRepo.insert(CategoryEntity(ledgerId = ledgerId, name = name, color = color))
+            val ledgerId = authRepo.resolveLedgerId()
+            categoryRepo.insert(CategoryEntity(ledgerId = ledgerId, name = name, color = color, type = type))
         }
     }
 

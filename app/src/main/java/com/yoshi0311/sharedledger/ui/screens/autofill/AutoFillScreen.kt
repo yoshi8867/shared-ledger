@@ -249,7 +249,7 @@ fun AutoFillScreen(
                         PendingNotificationItem(
                             item          = item,
                             categories    = categories,
-                            onAddCategory = { name, color -> viewModel.addCategory(name, color) },
+                            onAddCategory = { name, color, type -> viewModel.addCategory(name, color, type) },
                             onApprove     = { amount, type, date, desc, categoryId ->
                                 viewModel.approve(item, amount, type, date, desc, categoryId)
                             },
@@ -472,7 +472,7 @@ private fun AppIcon(drawable: android.graphics.drawable.Drawable?, modifier: Mod
 private fun PendingNotificationItem(
     item: PendingNotificationEntity,
     categories: List<CategoryEntity>,
-    onAddCategory: (name: String, color: String) -> Unit,
+    onAddCategory: (name: String, color: String, type: String) -> Unit,
     onApprove: (amount: Long, type: String, date: Date, description: String, categoryId: Long?) -> Unit,
     onReject: () -> Unit
 ) {
@@ -531,16 +531,26 @@ private fun PendingNotificationItem(
 
             HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
 
-            // 수입 / 지출 토글
+            // 수입 / 지출 토글 (전환 시 반대 타입 카테고리 선택 해제)
             SingleChoiceSegmentedButtonRow(Modifier.fillMaxWidth()) {
                 SegmentedButton(
                     selected = selectedType == "income",
-                    onClick  = { selectedType = "income" },
+                    onClick  = {
+                        if (selectedType != "income") {
+                            selectedType = "income"
+                            selectedCategoryId = null
+                        }
+                    },
                     shape    = SegmentedButtonDefaults.itemShape(index = 0, count = 2)
                 ) { Text("수입") }
                 SegmentedButton(
                     selected = selectedType == "expense",
-                    onClick  = { selectedType = "expense" },
+                    onClick  = {
+                        if (selectedType != "expense") {
+                            selectedType = "expense"
+                            selectedCategoryId = null
+                        }
+                    },
                     shape    = SegmentedButtonDefaults.itemShape(index = 1, count = 2)
                 ) { Text("지출") }
             }
@@ -629,8 +639,9 @@ private fun PendingNotificationItem(
 
             Spacer(Modifier.height(8.dp))
 
-            // 구분(카테고리) 선택
-            val selectedCategory = categories.find { it.id == selectedCategoryId }
+            // 구분(카테고리) 선택 — 현재 타입(수입/지출)에 해당하는 것만 노출
+            val filteredCategories = categories.filter { it.type == selectedType }
+            val selectedCategory = filteredCategories.find { it.id == selectedCategoryId }
             OutlinedButton(
                 onClick  = { showCategoryDialog = true },
                 modifier = Modifier.fillMaxWidth()
@@ -675,13 +686,13 @@ private fun PendingNotificationItem(
     // 카테고리 선택 다이얼로그
     if (showCategoryDialog) {
         CategoryDialog(
-            categories         = categories,
+            categories         = categories.filter { it.type == selectedType },
             selectedCategoryId = selectedCategoryId ?: -1L,
             onSelectCategory   = { cat ->
                 selectedCategoryId = cat.id
                 showCategoryDialog = false
             },
-            onAddCategory      = onAddCategory,
+            onAddCategory      = { name, color -> onAddCategory(name, color, selectedType) },
             onDismiss          = { showCategoryDialog = false }
         )
     }

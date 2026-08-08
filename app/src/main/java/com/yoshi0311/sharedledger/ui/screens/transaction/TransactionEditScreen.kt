@@ -48,7 +48,9 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
@@ -77,7 +79,7 @@ fun TransactionEditScreen(
     val nowCal = remember { Calendar.getInstance() }
 
     var type by remember { mutableStateOf("expense") }
-    var amountRaw by remember { mutableStateOf("") }          // 실제 숫자 문자열
+    var amountFieldValue by remember { mutableStateOf(TextFieldValue("")) }
     var selectedDate by remember {
         mutableStateOf(
             if (viewModel.initialDateMillis > 0) Date(viewModel.initialDateMillis) else Date()
@@ -97,7 +99,8 @@ fun TransactionEditScreen(
         val existing = uiState.existing ?: return@LaunchedEffect
         if (!formInitialized) {
             type = existing.type
-            amountRaw = existing.amount.toString()
+            val formatted = numberFormat.format(existing.amount)
+            amountFieldValue = TextFieldValue(text = formatted, selection = TextRange(formatted.length))
             selectedDate = existing.date
             existing.time.split(":").let { parts ->
                 selectedHour = parts.getOrNull(0)?.toIntOrNull() ?: 0
@@ -117,7 +120,6 @@ fun TransactionEditScreen(
     val timeText = "%02d:%02d".format(selectedHour, selectedMinute)
     val filteredCategories = categories.filter { it.type == type }
     val selectedCategory = filteredCategories.find { it.id == selectedCategoryId }
-    val amountDisplay = amountRaw.toLongOrNull()?.let { numberFormat.format(it) } ?: amountRaw
 
     if (showCategoryDialog) {
         CategoryDialog(
@@ -247,10 +249,19 @@ fun TransactionEditScreen(
 
             // 금액 (천단위 쉼표 표시)
             OutlinedTextField(
-                value = amountDisplay,
-                onValueChange = { input ->
-                    // 숫자만 추출하여 저장
-                    amountRaw = input.filter { it.isDigit() }
+                value = amountFieldValue,
+                onValueChange = { incoming ->
+                    val digits = incoming.text.filter { it.isDigit() }
+                    val formatted = digits.toLongOrNull()?.let { numberFormat.format(it) } ?: digits
+                    // 입력 전 커서 앞에 있던 숫자 개수를 세어 포맷된 문자열에서 같은 위치를 찾음
+                    val digitsBeforeCursor = incoming.text.take(incoming.selection.end).count { it.isDigit() }
+                    var cursorPos = formatted.length
+                    var seen = 0
+                    for (i in formatted.indices) {
+                        if (seen == digitsBeforeCursor) { cursorPos = i; break }
+                        if (formatted[i].isDigit()) seen++
+                    }
+                    amountFieldValue = TextFieldValue(text = formatted, selection = TextRange(cursorPos))
                 },
                 label = { Text("금액") },
                 singleLine = true,
@@ -331,7 +342,7 @@ fun TransactionEditScreen(
             Spacer(modifier = Modifier.height(32.dp))
 
             // 저장 버튼
-            val amount = amountRaw.toLongOrNull() ?: 0L
+            val amount = amountFieldValue.text.filter { it.isDigit() }.toLongOrNull() ?: 0L
             Button(
                 onClick = {
                     viewModel.save(

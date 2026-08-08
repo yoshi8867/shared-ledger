@@ -13,6 +13,7 @@ import androidx.compose.material.icons.filled.List
 import androidx.compose.material.icons.filled.MarkEmailUnread
 import androidx.compose.material.icons.filled.People
 import androidx.compose.material.icons.filled.PieChart
+import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Sync
 import androidx.compose.material3.Badge
@@ -70,6 +71,9 @@ fun HomeScreen(
     val selectedCalendarDay by viewModel.selectedCalendarDay.collectAsStateWithLifecycle()
     val syncState    by viewModel.syncState.collectAsStateWithLifecycle()
     val pendingCount by viewModel.pendingCount.collectAsStateWithLifecycle()
+    val searchOpen    by viewModel.searchOpen.collectAsStateWithLifecycle()
+    val searchFilter  by viewModel.searchFilter.collectAsStateWithLifecycle()
+    val searchResults by viewModel.searchResults.collectAsStateWithLifecycle()
 
     val snackbarHostState = remember { SnackbarHostState() }
     val activeLedgerId = viewModel.currentLedgerId.collectAsStateWithLifecycle().value
@@ -115,6 +119,10 @@ fun HomeScreen(
             TopAppBar(
                 title = {},
                 actions = {
+                    // 검색 모달 열기
+                    IconButton(onClick = { viewModel.openSearch() }) {
+                        Icon(imageVector = Icons.Filled.Search, contentDescription = "검색")
+                    }
                     // 자동입력 배지 아이콘
                     IconButton(onClick = onNavigateToAutoFill) {
                         BadgedBox(
@@ -237,17 +245,50 @@ fun HomeScreen(
                     onDaySelected = { viewModel.selectCalendarDay(it) },
                     onTransactionClick = { tx -> onNavigateToTransactionEdit(tx.id, -1L) }
                 )
-                2 -> StatisticViewTab(
-                    transactions = uiState.transactions,
-                    categories = uiState.categories,
-                    totalIncome = uiState.totalIncome,
-                    totalExpense = uiState.totalExpense,
-                    isLoading = uiState.isLoading
-                )
+                2 -> {
+                    val trendSums by viewModel.trendSums.collectAsStateWithLifecycle()
+                    val trendOffset by viewModel.trendOffset.collectAsStateWithLifecycle()
+                    val trendCheckedExpense by viewModel.trendCheckedExpense.collectAsStateWithLifecycle()
+                    val trendCheckedIncome by viewModel.trendCheckedIncome.collectAsStateWithLifecycle()
+                    val trendDetail by viewModel.trendDetail.collectAsStateWithLifecycle()
+
+                    StatisticViewTab(
+                        transactions = uiState.transactions,
+                        categories = uiState.categories,
+                        totalIncome = uiState.totalIncome,
+                        totalExpense = uiState.totalExpense,
+                        isLoading = uiState.isLoading,
+                        trendSums = trendSums,
+                        trendMonths = viewModel.trendMonths(trendOffset),
+                        trendCanGoNewer = trendOffset > 0,
+                        onShiftTrendWindow = { viewModel.shiftTrendWindow(it) },
+                        trendCheckedExpense = trendCheckedExpense,
+                        trendCheckedIncome = trendCheckedIncome,
+                        onToggleTrendCategory = { type, name ->
+                            viewModel.toggleTrendCategory(type, name)
+                        },
+                        trendDetail = trendDetail,
+                        onOpenTrendDetail = { viewModel.openTrendDetail(it) },
+                        onCloseTrendDetail = { viewModel.closeTrendDetail() }
+                    )
+                }
             }
         }
     }
 
+    if (searchOpen) {
+        SearchDialog(
+            filter = searchFilter,
+            categories = uiState.categories,
+            results = searchResults,
+            onChange = { viewModel.updateSearch(it) },
+            onDismiss = { viewModel.closeSearch() },
+            onResultClick = { tx ->
+                viewModel.closeSearch()
+                onNavigateToTransactionEdit(tx.id, -1L)
+            }
+        )
+    }
 }
 
 @Composable

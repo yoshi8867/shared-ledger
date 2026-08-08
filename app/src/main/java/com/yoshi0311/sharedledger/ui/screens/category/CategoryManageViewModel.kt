@@ -32,21 +32,16 @@ class CategoryManageViewModel @Inject constructor(
 
     @OptIn(ExperimentalCoroutinesApi::class)
     val categories: StateFlow<List<CategoryEntity>> = combine(
-        authRepository.activeLedgerId, _selectedType
+        authRepository.currentLedgerIdFlow, _selectedType
     ) { ledgerId, type -> Pair(ledgerId, type) }
         .flatMapLatest { (ledgerId, type) ->
-            if (ledgerId != null) {
-                categoryRepository.getByLedgerIdAndType(ledgerId, type)
-            } else {
-                flowOf(emptyList())
-            }
+            categoryRepository.getByLedgerIdAndType(ledgerId, type)
         }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
     fun addCategory(name: String, colorHex: String, type: String) {
         viewModelScope.launch {
-            val ledgerId = authRepository.activeLedgerId.stateIn(viewModelScope).value
-                ?: return@launch
+            val ledgerId = authRepository.resolveLedgerId()
             val category = CategoryEntity(
                 id = 0,
                 ledgerId = ledgerId,

@@ -32,8 +32,9 @@ class TokenAuthenticator @Inject constructor(
                 authDataStore.saveTokens(res.accessToken, res.refreshToken)
                 res.accessToken
             }.getOrElse { e ->
-                // refresh 자체가 HTTP 오류(401 등) → 토큰 무효, 저장 토큰 클리어
-                if (e is HttpException) authDataStore.clearTokens()
+                // refresh가 401(진짜 인증 실패)일 때만 토큰 클리어.
+                // 500 등 일시적 서버 오류(예: DB 다운)에는 토큰을 지우지 않는다 — 멀쩡한 토큰이 날아가면 안 됨.
+                if (e is HttpException && e.code() == 401) authDataStore.clearTokens()
                 null
             }
         } ?: return null

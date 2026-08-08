@@ -39,14 +39,13 @@ class TransactionEditViewModel @Inject constructor(
     val transactionId: Long = savedStateHandle.get<Long>("id") ?: -1L
     val initialDateMillis: Long = savedStateHandle.get<Long>("dateMillis") ?: -1L
 
-    private suspend fun currentLedgerId(): Long = authRepo.activeLedgerId.firstOrNull() ?: 1L
+    private suspend fun currentLedgerId(): Long = authRepo.resolveLedgerId()
 
     private val _uiState = MutableStateFlow(TransactionEditUiState())
     val uiState: StateFlow<TransactionEditUiState> = _uiState.asStateFlow()
 
     @OptIn(ExperimentalCoroutinesApi::class)
-    val categories: StateFlow<List<CategoryEntity>> = authRepo.activeLedgerId
-        .map { it ?: 1L }
+    val categories: StateFlow<List<CategoryEntity>> = authRepo.currentLedgerIdFlow
         .flatMapLatest { ledgerId -> categoryRepo.getByLedgerId(ledgerId) }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
 
@@ -111,7 +110,7 @@ class TransactionEditViewModel @Inject constructor(
 
     fun addCategory(name: String, color: String, type: String) {
         viewModelScope.launch {
-            val ledgerId = authRepo.activeLedgerId.firstOrNull() ?: return@launch
+            val ledgerId = authRepo.resolveLedgerId()
             categoryRepo.insert(
                 CategoryEntity(
                     ledgerId = ledgerId,

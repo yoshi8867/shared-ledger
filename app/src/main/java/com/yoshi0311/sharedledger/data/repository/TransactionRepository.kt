@@ -29,6 +29,9 @@ class TransactionRepository(private val dao: TransactionDao) {
     fun getTotalExpenseByMonth(ledgerId: Long, month: String): Flow<Long> =
         dao.getTotalExpenseByMonth(ledgerId, month)
 
+    fun getMonthlyCategorySums(ledgerId: Long, fromMonth: String, toMonth: String) =
+        dao.getMonthlyCategorySums(ledgerId, fromMonth, toMonth)
+
     suspend fun insert(transaction: TransactionEntity): Long =
         dao.insert(transaction.copy(syncStatus = "pending"))
 

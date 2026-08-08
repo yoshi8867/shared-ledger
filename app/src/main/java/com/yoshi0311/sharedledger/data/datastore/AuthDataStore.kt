@@ -7,6 +7,7 @@ import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.longPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
+import androidx.datastore.preferences.core.stringSetPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
 import com.yoshi0311.sharedledger.network.ServerUrlProvider
 import dagger.hilt.android.qualifiers.ApplicationContext
@@ -29,9 +30,20 @@ class AuthDataStore @Inject constructor(@ApplicationContext private val context:
     private val NOTIFICATIONS_ENABLED = booleanPreferencesKey("notifications_enabled")
     private val ENABLED_PACKAGES      = stringPreferencesKey("enabled_packages")
     private val LAST_LOGIN_METHOD     = stringPreferencesKey("last_login_method")
+    private val GUEST_MODE            = booleanPreferencesKey("guest_mode")
 
     // 장부별 마지막 동기화 시간 키 — "last_synced_at_${ledgerId}"
     private fun lastSyncedAtKey(ledgerId: Long) = stringPreferencesKey("last_synced_at_$ledgerId")
+
+    // 추이 그래프 체크된 카테고리 이름 — 수입/지출 탭별 저장
+    private fun trendCategoriesKey(type: String) = stringSetPreferencesKey("trend_categories_$type")
+
+    fun getTrendCategories(type: String): Flow<Set<String>> =
+        context.dataStore.data.map { it[trendCategoriesKey(type)] ?: emptySet() }
+
+    suspend fun saveTrendCategories(type: String, names: Set<String>) {
+        context.dataStore.edit { it[trendCategoriesKey(type)] = names }
+    }
 
     val accessToken:         Flow<String?> = context.dataStore.data.map { it[ACCESS_TOKEN] }
     val refreshToken:        Flow<String?> = context.dataStore.data.map { it[REFRESH_TOKEN] }
@@ -41,6 +53,7 @@ class AuthDataStore @Inject constructor(@ApplicationContext private val context:
     val syncInterval:        Flow<String>  = context.dataStore.data.map { it[SYNC_INTERVAL] ?: "manual" }
     val notificationsEnabled: Flow<Boolean> = context.dataStore.data.map { it[NOTIFICATIONS_ENABLED] ?: true }
     val lastLoginMethod:     Flow<String?> = context.dataStore.data.map { it[LAST_LOGIN_METHOD] }
+    val guestMode:           Flow<Boolean> = context.dataStore.data.map { it[GUEST_MODE] ?: false }
 
     fun getLastSyncedAt(ledgerId: Long): Flow<String?> =
         context.dataStore.data.map { it[lastSyncedAtKey(ledgerId)] }
@@ -77,6 +90,10 @@ class AuthDataStore @Inject constructor(@ApplicationContext private val context:
 
     suspend fun saveLastLoginMethod(method: String) {
         context.dataStore.edit { it[LAST_LOGIN_METHOD] = method }
+    }
+
+    suspend fun setGuestMode(enabled: Boolean) {
+        context.dataStore.edit { it[GUEST_MODE] = enabled }
     }
 
     suspend fun clearTokens() {

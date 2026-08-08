@@ -25,15 +25,21 @@ import androidx.compose.ui.unit.dp
 import com.yoshi0311.sharedledger.data.db.entity.CategoryEntity
 import com.yoshi0311.sharedledger.data.db.entity.TransactionEntity
 import java.text.NumberFormat
+import java.text.SimpleDateFormat
 import java.util.Locale
 
 @Composable
 fun TransactionItem(
     transaction: TransactionEntity,
     category: CategoryEntity?,
-    onClick: () -> Unit
+    onClick: () -> Unit,
+    // true면 시각(hh:mm) 대신 날짜(yy-MM-dd) 표시 — 날짜가 섞인 검색 결과용
+    showDate: Boolean = false
 ) {
     val fmt = NumberFormat.getNumberInstance(Locale.KOREA)
+    val subLabel = if (showDate)
+        SimpleDateFormat("yy-MM-dd", Locale.KOREA).format(transaction.date)
+    else transaction.time.take(5)
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -60,7 +66,7 @@ fun TransactionItem(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    text = transaction.time.take(5),
+                    text = subLabel,
                     style = MaterialTheme.typography.labelSmall,
                     color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
                 )

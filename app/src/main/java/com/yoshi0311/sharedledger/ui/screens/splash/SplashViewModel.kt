@@ -33,7 +33,9 @@ class SplashViewModel @Inject constructor(
             // Render 서버 웜업 핑 (결과 무시, 백그라운드 실행)
             launch { runCatching { syncApi.ping() } }
             delay(1500L)
-            _destination.value = if (authRepository.isLoggedIn()) {
+            val loggedIn = authRepository.isLoggedIn()
+            val guest = authRepository.guestMode.first()
+            _destination.value = if (loggedIn || guest) {
                 SplashDestination.HOME
             } else {
                 SplashDestination.LOGIN

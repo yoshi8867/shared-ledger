@@ -17,6 +17,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.VisibilityOff
+import androidx.compose.material3.Checkbox
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -42,7 +43,10 @@ fun BarChart(
     stats: List<CategoryStat>,
     modifier: Modifier = Modifier,
     onToggle: ((String) -> Unit)? = null,
-    onItemClick: ((CategoryStat) -> Unit)? = null
+    onItemClick: ((CategoryStat) -> Unit)? = null,
+    // 추이 그래프용 체크박스 — checkedNames가 null이 아니면 각 항목 왼쪽에 표시
+    checkedNames: Set<String>? = null,
+    onCheckToggle: ((String) -> Unit)? = null
 ) {
     if (stats.isEmpty()) return
 
@@ -58,6 +62,16 @@ fun BarChart(
                 modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically
             ) {
+                // 추이 그래프 포함 여부 체크박스
+                if (checkedNames != null) {
+                    Checkbox(
+                        checked = stat.name in checkedNames,
+                        onCheckedChange = { onCheckToggle?.invoke(stat.name) },
+                        modifier = Modifier.size(32.dp)
+                    )
+                    Spacer(modifier = Modifier.width(6.dp))
+                }
+
                 // 클릭 가능한 콘텐츠 영역
                 Column(
                     modifier = Modifier

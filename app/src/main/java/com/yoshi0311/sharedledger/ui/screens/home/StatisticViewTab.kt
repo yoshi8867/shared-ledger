@@ -40,12 +40,20 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ShowChart
+import androidx.compose.material3.Icon
+import androidx.compose.material3.TextButton
+import com.yoshi0311.sharedledger.data.db.dao.MonthlyCategorySum
 import com.yoshi0311.sharedledger.data.db.entity.CategoryEntity
 import com.yoshi0311.sharedledger.data.db.entity.TransactionEntity
 import com.yoshi0311.sharedledger.ui.components.BarChart
+import com.yoshi0311.sharedledger.ui.components.MonthBarData
+import com.yoshi0311.sharedledger.ui.components.MonthlyTrendChart
 import com.yoshi0311.sharedledger.ui.components.PieChart
 import com.yoshi0311.sharedledger.ui.components.TransactionItem
 import com.yoshi0311.sharedledger.ui.components.parseHexColor
+import com.yoshi0311.sharedledger.util.AppYearMonth
 import java.text.NumberFormat
 import java.text.SimpleDateFormat
 import java.util.Locale
@@ -109,7 +117,17 @@ fun StatisticViewTab(
     categories: List<CategoryEntity>,
     totalIncome: Long,
     totalExpense: Long,
-    isLoading: Boolean
+    isLoading: Boolean,
+    trendSums: List<MonthlyCategorySum> = emptyList(),
+    trendMonths: List<AppYearMonth> = emptyList(),
+    trendCanGoNewer: Boolean = false,
+    onShiftTrendWindow: (Int) -> Unit = {},
+    trendCheckedExpense: Set<String> = emptySet(),
+    trendCheckedIncome: Set<String> = emptySet(),
+    onToggleTrendCategory: (type: String, name: String) -> Unit = { _, _ -> },
+    trendDetail: HomeViewModel.TrendDetail? = null,
+    onOpenTrendDetail: (AppYearMonth) -> Unit = {},
+    onCloseTrendDetail: () -> Unit = {}
 ) {
     if (isLoading) {
         Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
@@ -121,6 +139,7 @@ fun StatisticViewTab(
     var selectedType by remember { mutableStateOf("expense") }
     var excludedNames by remember { mutableStateOf(emptySet<String>()) }
     var selectedStat by remember { mutableStateOf<CategoryStat?>(null) }
+    var trendOpen by remember { mutableStateOf(false) }
 
     val rawStats = remember(transactions, categories, selectedType) {
         computeRawStats(transactions, categories, selectedType)
@@ -214,6 +233,86 @@ fun StatisticViewTab(
                 }
             }
 
+            // ── 월별 추이 토글 버튼 (도넛 바로 아래 우측) ────────────────────
+            val trendChecked =
+                if (selectedType == "expense") trendCheckedExpense else trendCheckedIncome
+
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 8.dp)
+            ) {
+                Spacer(modifier = Modifier.weight(1f))
+                TextButton(onClick = { trendOpen = !trendOpen }) {
+                    Icon(
+                        Icons.AutoMirrored.Filled.ShowChart,
+                        contentDescription = null,
+                        modifier = Modifier.size(18.dp)
+                    )
+                    Spacer(modifier = Modifier.width(4.dp))
+                    Text(if (trendOpen) "추이 닫기" else "추이")
+                }
+            }
+
+            // ── 월별 추이 스택 막대그래프 ────────────────────────────────────
+            if (trendOpen && trendMonths.isNotEmpty()) {
+                val categoryById = remember(categories) { categories.associateBy { it.id } }
+                // 체크된 이름을 카테고리 목록 순서로 고정 → 월마다 쌓이는 순서 일관
+                val orderedChecked = remember(categories, selectedType, trendChecked) {
+                    (categories.filter { it.type == selectedType }.map { it.name } + "구분 없음")
+                        .distinct()
+                        .filter { it in trendChecked }
+                }
+                val colorByName = remember(categories) {
+                    categories.associate { it.name to parseHexColor(it.color) } +
+                        ("구분 없음" to Color(0xFF9E9E9E))
+                }
+                val trendBars = remember(trendSums, trendMonths, selectedType, orderedChecked) {
+                    trendMonths.map { m ->
+                        val key = m.format()
+                        val amountByName = trendSums
+                            .filter { it.month == key && it.type == selectedType }
+                            .groupBy { s -> s.categoryId?.let { categoryById[it]?.name } ?: "구분 없음" }
+                            .mapValues { (_, list) -> list.sumOf { it.total } }
+                        val segments = orderedChecked.mapNotNull { name ->
+                            val amount = amountByName[name] ?: 0L
+                            if (amount > 0)
+                                (colorByName[name] ?: Color(0xFF9E9E9E)) to amount
+                            else null
+                        }
+                        MonthBarData(
+                            label = "${m.month}월",
+                            segments = segments,
+                            total = segments.sumOf { it.second }
+                        )
+                    }
+                }
+
+                MonthlyTrendChart(
+                    bars = trendBars,
+                    rangeLabel = "${trendMonths.first().shortDisplayLabel()} ~ ${trendMonths.last().shortDisplayLabel()}",
+                    canGoNewer = trendCanGoNewer,
+                    onShiftWindow = onShiftTrendWindow,
+                    onBarClick = { index -> onOpenTrendDetail(trendMonths[index]) },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 8.dp)
+                )
+                if (orderedChecked.isEmpty()) {
+                    Text(
+                        text = "아래 목록에서 추이를 볼 항목을 체크하세요",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f),
+                        textAlign = TextAlign.Center,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = 4.dp)
+                    )
+                }
+                Spacer(modifier = Modifier.height(8.dp))
+                HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp))
+            }
+
             // 카테고리별 바 차트
             val activeTotal = activeStats.sumOf { it.amount }
             Text(
@@ -231,7 +330,9 @@ fun StatisticViewTab(
                         excludedNames + name
                     }
                 },
-                onItemClick = { stat -> selectedStat = stat }
+                onItemClick = { stat -> selectedStat = stat },
+                checkedNames = if (trendOpen) trendChecked else null,
+                onCheckToggle = { name -> onToggleTrendCategory(selectedType, name) }
             )
         }
 
@@ -307,6 +408,97 @@ fun StatisticViewTab(
                 LazyColumn(modifier = Modifier.fillMaxWidth()) {
                     grouped.forEach { (dateStr, txList) ->
                         stickyHeader(key = "detail_header_$dateStr") {
+                            Surface(
+                                color = MaterialTheme.colorScheme.surfaceVariant,
+                                modifier = Modifier.fillMaxWidth()
+                            ) {
+                                Text(
+                                    text = dateStr,
+                                    style = MaterialTheme.typography.labelMedium,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 6.dp)
+                                )
+                            }
+                        }
+                        items(txList, key = { it.id }) { tx ->
+                            TransactionItem(
+                                transaction = tx,
+                                category = categoryMap[tx.categoryId],
+                                onClick = {}
+                            )
+                        }
+                    }
+                    item { Spacer(modifier = Modifier.height(40.dp)) }
+                }
+            }
+        }
+    }
+
+    // 추이 막대 탭 → 해당 월의 체크된 항목 거래 내역 모달
+    if (trendDetail != null) {
+        val detail = trendDetail
+        val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+        val categoryMap = remember(categories) { categories.associateBy { it.id } }
+        val dateFormat = remember { SimpleDateFormat("MM월 dd일 (EEE)", Locale.KOREA) }
+        val trendChecked =
+            if (selectedType == "expense") trendCheckedExpense else trendCheckedIncome
+
+        val monthTxs = remember(detail, selectedType, trendChecked, categories) {
+            detail.transactions
+                .filter { tx ->
+                    val catName = categoryMap[tx.categoryId]?.name ?: "구분 없음"
+                    tx.type == selectedType && catName in trendChecked
+                }
+                .sortedWith(
+                    compareByDescending<TransactionEntity> { it.date }.thenBy { it.time }
+                )
+        }
+        val monthTotal = remember(monthTxs) { monthTxs.sumOf { it.amount } }
+        val grouped = remember(monthTxs) {
+            monthTxs.groupBy { dateFormat.format(it.date) }
+        }
+
+        ModalBottomSheet(
+            onDismissRequest = onCloseTrendDetail,
+            sheetState = sheetState
+        ) {
+            // 헤더: 월 + 타입 라벨 — 우측 합산 금액
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp, vertical = 8.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = "${detail.month.shortDisplayLabel()} $typeLabel 내역",
+                    style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold)
+                )
+                Spacer(modifier = Modifier.weight(1f))
+                Text(
+                    text = "${fmt.format(monthTotal)}원",
+                    style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
+                    color = if (selectedType == "income") Color(0xFFF44336) else Color(0xFF2196F3)
+                )
+            }
+            HorizontalDivider()
+
+            if (monthTxs.isEmpty()) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(120.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = "내역이 없습니다",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f)
+                    )
+                }
+            } else {
+                LazyColumn(modifier = Modifier.fillMaxWidth()) {
+                    grouped.forEach { (dateStr, txList) ->
+                        stickyHeader(key = "trend_detail_header_$dateStr") {
                             Surface(
                                 color = MaterialTheme.colorScheme.surfaceVariant,
                                 modifier = Modifier.fillMaxWidth()

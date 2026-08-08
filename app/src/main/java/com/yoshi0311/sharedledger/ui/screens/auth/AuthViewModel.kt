@@ -95,6 +95,14 @@ class AuthViewModel @Inject constructor(
         }
     }
 
+    /** 로그인 건너뛰기 — 게스트 모드로 진입 (로컬 전용, 나중에 로그인 시 데이터 승계) */
+    fun enterGuestMode(onDone: () -> Unit) {
+        viewModelScope.launch {
+            authRepository.enterGuestMode()
+            onDone()
+        }
+    }
+
     fun logout() {
         viewModelScope.launch {
             authRepository.logout()

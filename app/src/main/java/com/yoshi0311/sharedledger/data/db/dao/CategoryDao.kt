@@ -55,6 +55,10 @@ interface CategoryDao {
     @Query("UPDATE categories SET is_deleted = 1, deleted_at = :deletedAt, sync_status = 'synced', updated_at = :deletedAt WHERE id = :id")
     suspend fun softDeleteFromServer(id: Long, deletedAt: Date)
 
+    /** 게스트 로컬 데이터를 로그인 계정의 장부로 이관 → 전부 pending으로 재표시해 서버에 push */
+    @Query("UPDATE categories SET ledger_id = :newLedgerId, server_id = NULL, sync_status = 'pending', synced_at = NULL WHERE ledger_id = :oldLedgerId")
+    suspend fun reassignLedger(oldLedgerId: Long, newLedgerId: Long)
+
     @Query("DELETE FROM categories WHERE is_deleted = 1 AND deleted_at < :beforeDate")
     suspend fun purgeDeletedCategories(beforeDate: Date)
 }

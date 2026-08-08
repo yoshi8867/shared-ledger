@@ -89,7 +89,7 @@ fun LoginScreen(
             confirmButton = {
                 TextButton(onClick = {
                     showSkipDialog = false
-                    onNavigateToHome()
+                    viewModel.enterGuestMode { onNavigateToHome() }
                 }) { Text("계속") }
             },
             dismissButton = {

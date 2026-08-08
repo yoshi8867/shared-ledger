@@ -9,7 +9,13 @@ import com.yoshi0311.sharedledger.data.db.entity.TransactionEntity
 import kotlinx.coroutines.flow.Flow
 import java.util.Date
 
-
+/** 월별·카테고리별 합계 (추이 그래프용) */
+data class MonthlyCategorySum(
+    val month: String,      // "yyyy-MM"
+    val categoryId: Long?,  // null = 구분 없음
+    val type: String,       // "income" | "expense"
+    val total: Long
+)
 
 @Dao
 interface TransactionDao {
@@ -64,12 +70,26 @@ interface TransactionDao {
     @Query("SELECT COALESCE(SUM(amount), 0) FROM transactions WHERE ledger_id = :ledgerId AND is_deleted = 0 AND type = 'expense' AND strftime('%Y-%m', date/1000, 'unixepoch') = :month")
     fun getTotalExpenseByMonth(ledgerId: Long, month: String): Flow<Long>
 
+    @Query("""
+        SELECT strftime('%Y-%m', date/1000, 'unixepoch') AS month,
+               category_id AS categoryId, type, COALESCE(SUM(amount), 0) AS total
+        FROM transactions
+        WHERE ledger_id = :ledgerId AND is_deleted = 0
+          AND strftime('%Y-%m', date/1000, 'unixepoch') BETWEEN :fromMonth AND :toMonth
+        GROUP BY month, category_id, type
+    """)
+    fun getMonthlyCategorySums(ledgerId: Long, fromMonth: String, toMonth: String): Flow<List<MonthlyCategorySum>>
+
     // 기존 COUNT 쿼리 (HomeViewModel에서 사용)
     @Query("SELECT COUNT(*) FROM transactions WHERE ledger_id = :ledgerId AND is_deleted = 0 AND type = 'income'")
     fun getTotalIncome(ledgerId: Long): Flow<Long>
 
     @Query("SELECT COUNT(*) FROM transactions WHERE ledger_id = :ledgerId AND is_deleted = 0 AND type = 'expense'")
     fun getTotalExpense(ledgerId: Long): Flow<Long>
+
+    /** 게스트 로컬 데이터를 로그인 계정의 장부로 이관 → 전부 pending으로 재표시해 서버에 push */
+    @Query("UPDATE transactions SET ledger_id = :newLedgerId, server_id = NULL, sync_status = 'pending', synced_at = NULL WHERE ledger_id = :oldLedgerId")
+    suspend fun reassignLedger(oldLedgerId: Long, newLedgerId: Long)
 
     @Query("DELETE FROM transactions WHERE is_deleted = 1 AND deleted_at < :beforeDate")
     suspend fun purgeDeletedTransactions(beforeDate: Date)
