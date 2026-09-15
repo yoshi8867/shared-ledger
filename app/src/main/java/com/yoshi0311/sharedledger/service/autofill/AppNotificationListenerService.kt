@@ -1,6 +1,7 @@
 package com.yoshi0311.sharedledger.service.autofill
 
 import android.app.Notification
+import android.content.ComponentName
 import android.service.notification.NotificationListenerService
 import android.service.notification.StatusBarNotification
 import com.yoshi0311.sharedledger.data.datastore.AuthDataStore
@@ -30,6 +31,12 @@ class AppNotificationListenerService : NotificationListenerService() {
                 enabledPackagesCache = pkgs
             }
         }
+    }
+
+    // 재설치/OS 킬 등으로 언바인드되면 스스로 다시 붙는다 (안 그러면 조용히 죽은 채 방치됨)
+    override fun onListenerDisconnected() {
+        super.onListenerDisconnected()
+        requestRebind(ComponentName(this, AppNotificationListenerService::class.java))
     }
 
     override fun onDestroy() {

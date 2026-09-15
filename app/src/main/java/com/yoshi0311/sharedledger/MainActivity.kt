@@ -1,7 +1,11 @@
 package com.yoshi0311.sharedledger
 
+import android.content.ComponentName
 import android.os.Bundle
+import android.service.notification.NotificationListenerService
 import androidx.activity.ComponentActivity
+import androidx.core.app.NotificationManagerCompat
+import com.yoshi0311.sharedledger.service.autofill.AppNotificationListenerService
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
@@ -32,10 +36,21 @@ class MainActivity : ComponentActivity() {
         installSplashScreen()
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
+        rebindNotificationListenerIfGranted()
         setContent {
             SharedLedgerTheme {
                 AppNavigation()
             }
+        }
+    }
+
+    // 알림 접근이 켜져 있는데 리스너가 끊겨 있으면 재연결 요청.
+    // (재설치/OS 킬 후 자동 재바인드가 안 되는 문제 방지)
+    private fun rebindNotificationListenerIfGranted() {
+        if (packageName in NotificationManagerCompat.getEnabledListenerPackages(this)) {
+            NotificationListenerService.requestRebind(
+                ComponentName(this, AppNotificationListenerService::class.java)
+            )
         }
     }
 }
