@@ -97,6 +97,11 @@ class AutoFillRepository @Inject constructor(
         dao.updateStatus(id, "rejected")
     }
 
+    /** 합산 → 앵커 항목의 금액/타입 갱신 (저장은 사용자가 별도로) */
+    suspend fun updateParsed(id: Long, amount: Long, type: String) {
+        dao.updateParsed(id, amount, type)
+    }
+
     // ── 해시 유틸 ────────────────────────────────────────────────────────────
 
     /** 5분 버킷으로 같은 앱·금액 알림 중복 제거 */

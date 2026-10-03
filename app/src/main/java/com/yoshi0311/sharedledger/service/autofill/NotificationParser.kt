@@ -42,7 +42,9 @@ abstract class BaseKoreanFinanceParser : NotificationParser {
 
     companion object {
         val AMOUNT_REGEX = Regex("(\\d[\\d,]*)원")
-        private val INCOME_KEYWORDS = listOf("입금", "환급", "취소", "캐시백", "충전", "수신", "환불", "적립")
+        // "할인"은 결제 할인 푸시(예: "925원이 할인되어...")를 수입(+)으로 잡아
+        // 합산 시 지출에서 차감되게 하기 위함
+        private val INCOME_KEYWORDS = listOf("입금", "환급", "취소", "캐시백", "충전", "수신", "환불", "적립", "할인")
         private val REMOVE_WORDS = listOf(
             "결제", "승인", "완료", "했습니다", "했어요", "잔액", "출금", "입금", "이체",
             "사용", "체크카드", "신용카드", "카드", "은행", "승인번호", "에서", "으로",

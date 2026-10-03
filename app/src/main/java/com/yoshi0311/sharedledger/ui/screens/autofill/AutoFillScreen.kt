@@ -4,6 +4,7 @@ import android.Manifest
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.provider.Settings
+import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
@@ -147,6 +148,12 @@ fun AutoFillScreen(
 
     val items = if (selectedSource == "push") pushItems else smsItems
 
+    // ── 합산 모드 상태 ──────────────────────────────────────────────
+    var mergeAnchorId  by remember { mutableStateOf<Long?>(null) }
+    var mergeSelection by remember { mutableStateOf<Set<Long>>(emptySet()) }
+    // 소스(푸시/문자) 전환 시 합산 모드 초기화
+    LaunchedEffect(selectedSource) { mergeAnchorId = null; mergeSelection = emptySet() }
+
     Scaffold(
         topBar = {
             TopAppBar(
@@ -249,11 +256,32 @@ fun AutoFillScreen(
                         PendingNotificationItem(
                             item          = item,
                             categories    = categories,
+                            mergeActive    = mergeAnchorId != null,
+                            isAnchor       = mergeAnchorId == item.id,
+                            isChecked      = item.id in mergeSelection,
+                            selectionCount = mergeSelection.size,
                             onAddCategory = { name, color, type -> viewModel.addCategory(name, color, type) },
                             onApprove     = { amount, type, date, desc, categoryId ->
                                 viewModel.approve(item, amount, type, date, desc, categoryId)
                             },
-                            onReject      = { viewModel.reject(item.id) }
+                            onReject      = { viewModel.reject(item.id) },
+                            onStartMerge  = { mergeAnchorId = item.id; mergeSelection = emptySet() },
+                            onToggleCheck = {
+                                mergeSelection = if (item.id in mergeSelection)
+                                    mergeSelection - item.id else mergeSelection + item.id
+                            },
+                            onCancelMerge = { mergeAnchorId = null; mergeSelection = emptySet() },
+                            onConfirmMerge = {
+                                if (viewModel.merge(item.id, mergeSelection)) {
+                                    mergeAnchorId = null; mergeSelection = emptySet()
+                                } else {
+                                    Toast.makeText(
+                                        context,
+                                        "합산 결과가 0원이라 합산할 수 없습니다.",
+                                        Toast.LENGTH_SHORT
+                                    ).show()
+                                }
+                            }
                         )
                     }
                 }
@@ -472,15 +500,24 @@ private fun AppIcon(drawable: android.graphics.drawable.Drawable?, modifier: Mod
 private fun PendingNotificationItem(
     item: PendingNotificationEntity,
     categories: List<CategoryEntity>,
+    mergeActive: Boolean,
+    isAnchor: Boolean,
+    isChecked: Boolean,
+    selectionCount: Int,
     onAddCategory: (name: String, color: String, type: String) -> Unit,
     onApprove: (amount: Long, type: String, date: Date, description: String, categoryId: Long?) -> Unit,
-    onReject: () -> Unit
+    onReject: () -> Unit,
+    onStartMerge: () -> Unit,
+    onToggleCheck: () -> Unit,
+    onCancelMerge: () -> Unit,
+    onConfirmMerge: () -> Unit
 ) {
     val initCal = remember(item.id) {
         Calendar.getInstance().apply { time = item.parsedDate ?: Date() }
     }
-    var selectedType       by remember(item.id) { mutableStateOf(item.parsedType ?: "expense") }
-    var amountText         by remember(item.id) { mutableStateOf(item.parsedAmount?.toString() ?: "") }
+    // parsedType/parsedAmount를 키에 포함 → 합산으로 원본값이 바뀌면 카드에 즉시 반영
+    var selectedType       by remember(item.id, item.parsedType) { mutableStateOf(item.parsedType ?: "expense") }
+    var amountText         by remember(item.id, item.parsedAmount) { mutableStateOf(item.parsedAmount?.toString() ?: "") }
     var selectedDate       by remember(item.id) { mutableStateOf(item.parsedDate ?: Date()) }
     var selectedHour       by remember(item.id) { mutableIntStateOf(initCal.get(Calendar.HOUR_OF_DAY)) }
     var selectedMinute     by remember(item.id) { mutableIntStateOf(initCal.get(Calendar.MINUTE)) }
@@ -499,7 +536,10 @@ private fun PendingNotificationItem(
 
     Card(
         modifier  = Modifier.fillMaxWidth(),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+        colors    = if (isAnchor)
+            CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer)
+        else CardDefaults.cardColors()
     ) {
         Column(modifier = Modifier.padding(12.dp)) {
 
@@ -654,31 +694,56 @@ private fun PendingNotificationItem(
 
             Spacer(Modifier.height(8.dp))
 
-            // 취소 / 저장 버튼
-            Row(
-                modifier              = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                OutlinedButton(
-                    onClick  = onReject,
-                    modifier = Modifier.weight(1f)
-                ) { Text("취소") }
+            // 액션 버튼 — 합산 모드에 따라 분기
+            when {
+                // 평소: 취소 / 합산 / 저장
+                !mergeActive -> Row(
+                    modifier              = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    OutlinedButton(onClick = onReject, modifier = Modifier.weight(1f)) { Text("취소") }
+                    OutlinedButton(onClick = onStartMerge, modifier = Modifier.weight(1f)) { Text("합산") }
+                    Button(
+                        onClick  = {
+                            val amt = amountText.toLongOrNull() ?: return@Button
+                            val cal = Calendar.getInstance().apply {
+                                time = selectedDate
+                                set(Calendar.HOUR_OF_DAY, selectedHour)
+                                set(Calendar.MINUTE, selectedMinute)
+                                set(Calendar.SECOND, 0)
+                                set(Calendar.MILLISECOND, 0)
+                            }
+                            onApprove(amt, selectedType, cal.time, description, selectedCategoryId)
+                        },
+                        enabled  = isAmountValid,
+                        modifier = Modifier.weight(1f)
+                    ) { Text("저장") }
+                }
 
-                Button(
-                    onClick  = {
-                        val amt = amountText.toLongOrNull() ?: return@Button
-                        val cal = Calendar.getInstance().apply {
-                            time = selectedDate
-                            set(Calendar.HOUR_OF_DAY, selectedHour)
-                            set(Calendar.MINUTE, selectedMinute)
-                            set(Calendar.SECOND, 0)
-                            set(Calendar.MILLISECOND, 0)
-                        }
-                        onApprove(amt, selectedType, cal.time, description, selectedCategoryId)
-                    },
-                    enabled  = isAmountValid,
-                    modifier = Modifier.weight(1f)
-                ) { Text("저장") }
+                // 합산 모드 · 앵커 카드: 합산 취소 / 합산 확인(n)
+                isAnchor -> Row(
+                    modifier              = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    OutlinedButton(onClick = onCancelMerge, modifier = Modifier.weight(1f)) { Text("합산 취소") }
+                    Button(
+                        onClick  = onConfirmMerge,
+                        enabled  = selectionCount > 0,
+                        modifier = Modifier.weight(1f)
+                    ) { Text("합산 확인 ($selectionCount)") }
+                }
+
+                // 합산 모드 · 다른 카드: 합산 대상 체크박스
+                else -> Row(
+                    modifier          = Modifier
+                        .fillMaxWidth()
+                        .clickable(onClick = onToggleCheck)
+                        .padding(vertical = 4.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Checkbox(checked = isChecked, onCheckedChange = { onToggleCheck() })
+                    Text("합산 대상으로 선택", style = MaterialTheme.typography.bodyMedium)
+                }
             }
         }
     }

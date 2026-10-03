@@ -24,6 +24,10 @@ interface PendingNotificationDao {
     @Query("UPDATE pending_notifications SET status = :status WHERE id = :id")
     suspend fun updateStatus(id: Long, status: String)
 
+    /** 합산 결과를 앵커 항목에 반영 (금액/타입만 갱신, 저장은 사용자가) */
+    @Query("UPDATE pending_notifications SET parsed_amount = :amount, parsed_type = :type WHERE id = :id")
+    suspend fun updateParsed(id: Long, amount: Long, type: String)
+
     /** 처리 완료(approved/rejected)된 오래된 항목 삭제 */
     @Query("DELETE FROM pending_notifications WHERE status != 'pending' AND created_at < :before")
     suspend fun purgeOld(before: Date)

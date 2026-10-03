@@ -103,6 +103,34 @@ class AutoFillViewModel @Inject constructor(
         }
     }
 
+    /**
+     * 합산: 앵커 + 선택된 건들의 '원본 파싱값'을 부호 합산해 앵커 금액/타입에 반영하고
+     * 나머지 선택 건은 삭제(reject)한다. 저장은 사용자가 별도로 누른다.
+     * @return 합이 0이면 false(합산 불가), 그 외 true
+     */
+    fun merge(anchorId: Long, selectedIds: Set<Long>): Boolean {
+        val items = if (_selectedSource.value == "push") pushItems.value else smsItems.value
+        val anchor = items.find { it.id == anchorId } ?: return true
+        val others = items.filter { it.id in selectedIds && it.id != anchorId }
+
+        val signedSum = (listOf(anchor) + others).sumOf { signedAmount(it) }
+        if (signedSum == 0L) return false   // ①-A: 0원이면 합산하지 않음
+
+        val newType = if (signedSum > 0) "income" else "expense"
+        val newAmount = kotlin.math.abs(signedSum)
+        viewModelScope.launch {
+            autoFillRepo.updateParsed(anchorId, newAmount, newType)
+            others.forEach { autoFillRepo.reject(it.id) }
+        }
+        return true
+    }
+
+    /** 지출=음수, 수입=양수. 타입 미파싱 시 지출로 간주(카드 기본값과 동일) */
+    private fun signedAmount(e: PendingNotificationEntity): Long {
+        val amt = e.parsedAmount ?: 0L
+        return if (e.parsedType == "income") amt else -amt
+    }
+
     fun togglePackage(packageName: String) {
         viewModelScope.launch {
             val current = enabledPackages.value.toMutableSet()
